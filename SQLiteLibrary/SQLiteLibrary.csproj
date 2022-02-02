@@ -12,11 +12,13 @@
 		<Description>Thin C# wrapper of the prebuilt windows DLL of the SQLite library.</Description>
 		<Copyright>Copyright (c) Alexander Täschner 2022</Copyright>
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</RepositoryUrl>
+		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
 		<Version>1.0.0.0</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<PackageReleaseNotes>SQLite version 3.37.2</PackageReleaseNotes>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -37,6 +39,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
 	</ItemGroup>
 
 </Project>
