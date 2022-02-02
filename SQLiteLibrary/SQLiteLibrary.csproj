@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<DebugType>embedded</DebugType>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<PackageId>CommonLibraries.SQLiteLibrary</PackageId>
+		<PackageId>DotNetSQLiteLibrary</PackageId>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>Alexander Täschner</Authors>
 		<Description>Thin C# wrapper of the prebuilt windows DLL of the SQLite library.</Description>
