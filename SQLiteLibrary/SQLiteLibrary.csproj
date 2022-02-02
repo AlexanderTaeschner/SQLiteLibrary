@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<DebugType>embedded</DebugType>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageId>CommonLibraries.SQLiteLibrary</PackageId>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Authors>Alexander Täschner</Authors>
+		<Description>Thin C# wrapper of the prebuilt windows DLL of the SQLite library.</Description>
+		<Copyright>Copyright (c) Alexander Täschner 2022</Copyright>
+		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</RepositoryUrl>
+		<NeutralLanguage>en</NeutralLanguage>
+		<Version>1.0.0.0</Version>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<PackageReleaseNotes>SQLite version 3.37.2</PackageReleaseNotes>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="x86\sqlite3.dll" Pack="true" PackagePath="runtimes\win-x86\native">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="x64\sqlite3.dll" Pack="true" PackagePath="runtimes\win-x64\native">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.406">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>
