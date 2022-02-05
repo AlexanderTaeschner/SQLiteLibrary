@@ -67,6 +67,8 @@ public class SQLiteStatementTests
 
         double value = stmt.GetColumnDoubleValue(0);
         Assert.Equal(4.2, value);
+        double? value2 = stmt.GetColumnNullableDoubleValue(0);
+        Assert.Equal(4.2, value2.GetValueOrDefault());
 
         stmt.DoneStep();
     }
@@ -79,6 +81,8 @@ public class SQLiteStatementTests
 
         int value = stmt.GetColumnIntegerValue(0);
         Assert.Equal(42, value);
+        int? value2 = stmt.GetColumnNullableIntegerValue(0);
+        Assert.Equal(42, value2.GetValueOrDefault());
 
         stmt.DoneStep();
     }
@@ -91,6 +95,8 @@ public class SQLiteStatementTests
 
         long value = stmt.GetColumnLongValue(0);
         Assert.Equal(4242424242L, value);
+        long? value2 = stmt.GetColumnNullableLongValue(0);
+        Assert.Equal(4242424242L, value2.GetValueOrDefault());
 
         stmt.DoneStep();
     }
@@ -103,6 +109,8 @@ public class SQLiteStatementTests
 
         string value = stmt.GetColumnStringValue(0);
         Assert.Equal("Adams_42", value);
+        string? value2 = stmt.GetColumnNullableStringValue(0);
+        Assert.Equal("Adams_42", value2);
 
         stmt.DoneStep();
     }
@@ -118,18 +126,17 @@ public class SQLiteStatementTests
         Assert.Equal(0xAF, value[0]);
         Assert.Equal(0x42, value[1]);
         Assert.Equal(0xFA, value[2]);
+        byte[]? value2 = stmt.GetColumnNullableBlobValue(0);
 
-        stmt.DoneStep();
-    }
+        if (value2 is null)
+        {
+            throw new InvalidOperationException();
+        }
 
-    [Fact]
-    public void GetColumnNullableDoubleValue_Works()
-    {
-        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT NULL;");
-
-        double? value = stmt.GetColumnNullableDoubleValue(0);
-        Assert.Null(value);
+        Assert.Equal(3, value2.Length);
+        Assert.Equal(0xAF, value2[0]);
+        Assert.Equal(0x42, value2[1]);
+        Assert.Equal(0xFA, value2[2]);
 
         stmt.DoneStep();
     }
@@ -324,6 +331,44 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void BindZeroedBlobValue_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        stmt.BindZeroedBlobParameter(1, 3);
+
+        stmt.NewRowStep();
+
+        byte[] value = stmt.GetColumnBlobValue(0);
+        Assert.Equal(3, value.Length);
+        Assert.Equal(0, value[0]);
+        Assert.Equal(0, value[1]);
+        Assert.Equal(0, value[2]);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindZeroedBlob64Value_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        stmt.BindZeroedBlobParameter(1, 3L);
+
+        stmt.NewRowStep();
+
+        byte[] value = stmt.GetColumnBlobValue(0);
+        Assert.Equal(3, value.Length);
+        Assert.Equal(0, value[0]);
+        Assert.Equal(0, value[1]);
+        Assert.Equal(0, value[2]);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
     public void BindDateTimeValue_ISO8601Text_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -369,6 +414,7 @@ public class SQLiteStatementTests
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, dateTime, SQLiteDateTimeFormat.ISO8601Text));
         stmt.BindParameter("@value", dateTime, SQLiteDateTimeFormat.ISO8601Text);
 
         stmt.NewRowStep();
@@ -432,8 +478,16 @@ public class SQLiteStatementTests
 
         stmt.NewRowStep();
 
-        string? value = stmt.GetColumnNullableStringValue(0);
-        Assert.Null(value);
+        string? stringValue = stmt.GetColumnNullableStringValue(0);
+        Assert.Null(stringValue);
+        byte[]? blobValue = stmt.GetColumnNullableBlobValue(0);
+        Assert.Null(blobValue);
+        double? doubleValue = stmt.GetColumnNullableDoubleValue(0);
+        Assert.Null(doubleValue);
+        int? integerValue = stmt.GetColumnNullableIntegerValue(0);
+        Assert.Null(integerValue);
+        long? longValue = stmt.GetColumnNullableLongValue(0);
+        Assert.Null(longValue);
 
         stmt.DoneStep();
     }
@@ -444,6 +498,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
+        Assert.Throws<ArgumentNullException>(() => stmt.BindNullToParameter(null!));
         stmt.BindNullToParameter("@value");
 
         stmt.NewRowStep();

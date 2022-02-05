@@ -26,6 +26,7 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        Assert.Throws<ArgumentNullException>(() => conn.PrepareStatement(null!));
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;");
         Assert.NotNull(stmt);
     }
@@ -42,6 +43,14 @@ public class SQLiteConnectionTests
         int value = stmt.GetColumnIntegerValue(0);
         Assert.Equal(42, value);
         stmt.DoneStep();
+    }
+
+    [Fact]
+    public void ExecuteScalarStringQuery_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        string value = conn.ExecuteScalarStringQuery("SELECT 'Adams_42';");
+        Assert.Equal("Adams_42", value);
     }
 
     [Fact]
