@@ -289,6 +289,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
 
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, (byte[])null!));
         stmt.BindParameter(1, new byte[] { 0xAF, 0x42, 0xFA });
 
         stmt.NewRowStep();
@@ -308,6 +309,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, new byte[] { 0xAF, 0x42, 0xFA }));
         stmt.BindParameter("@value", new byte[] { 0xAF, 0x42, 0xFA });
 
         stmt.NewRowStep();
@@ -317,6 +319,137 @@ public class SQLiteStatementTests
         Assert.Equal(0xAF, value[0]);
         Assert.Equal(0x42, value[1]);
         Assert.Equal(0xFA, value[2]);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_ISO8601Text_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => stmt.BindParameter(1, new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), (SQLiteDateTimeFormat)int.MaxValue));
+        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.ISO8601Text);
+
+        stmt.NewRowStep();
+
+        string value = stmt.GetColumnStringValue(0);
+        Assert.Equal("1970-01-01 00:00:00Z", value);
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.ISO8601Text);
+        Assert.Equal(dateTime, dateTimeValue, new TimeSpan(0));
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_ISO8601Text_LocalTime_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => stmt.BindParameter(1, new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), (SQLiteDateTimeFormat)int.MaxValue));
+        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.ISO8601Text);
+
+        stmt.NewRowStep();
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.ISO8601Text);
+        Assert.Equal(dateTime, dateTimeValue, new TimeSpan(0));
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_NamedParameter_ISO8601Text_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
+
+        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        stmt.BindParameter("@value", dateTime, SQLiteDateTimeFormat.ISO8601Text);
+
+        stmt.NewRowStep();
+
+        string value = stmt.GetColumnStringValue(0);
+        Assert.Equal("1970-01-01 00:00:00Z", value);
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.ISO8601Text);
+        Assert.Equal(dateTime, dateTimeValue, new TimeSpan(0));
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_UnixTimeInteger_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.UnixTimeInteger);
+
+        stmt.NewRowStep();
+
+        long value = stmt.GetColumnLongValue(0);
+        Assert.Equal(0, value);
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.UnixTimeInteger);
+        Assert.Equal(dateTime, dateTimeValue);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_JulianDateReal_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.JulianDateReal);
+
+        stmt.NewRowStep();
+
+        double value = stmt.GetColumnDoubleValue(0);
+        Assert.Equal(2440587.5, value);
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.JulianDateReal);
+        Assert.Equal(dateTime, dateTimeValue);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullValue_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;");
+
+        stmt.BindNullToParameter(1);
+
+        stmt.NewRowStep();
+
+        string? value = stmt.GetColumnNullableStringValue(0);
+        Assert.Null(value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullValue_NamedParameter_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
+
+        stmt.BindNullToParameter("@value");
+
+        stmt.NewRowStep();
+
+        string? value = stmt.GetColumnNullableStringValue(0);
+        Assert.Null(value);
 
         stmt.DoneStep();
     }

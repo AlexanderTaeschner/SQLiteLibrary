@@ -47,7 +47,7 @@ public class SQLiteConnectionTests
     [Fact]
     public void Open_File_Works()
     {
-        string fileName = @"D:\taschna\test\SQLiteConnectionTests_TestDb.sqlite";
+        string fileName = "SQLiteConnectionTests_TestDb.sqlite";
         if (File.Exists(fileName))
         {
             File.Delete(fileName);

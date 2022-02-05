@@ -439,7 +439,8 @@ public sealed class SQLiteStatement : IDisposable
         if (format == SQLiteDateTimeFormat.ISO8601Text)
         {
             string? text = GetColumnStringValue(columnIndex);
-            return DateTime.ParseExact(text, ISO8601TextFormat, CultureInfo.InvariantCulture);
+            DateTimeStyles style = (text[^1] == 'Z') ? DateTimeStyles.AdjustToUniversal : DateTimeStyles.None;
+            return DateTime.ParseExact(text, ISO8601TextFormat, CultureInfo.InvariantCulture, style);
         }
         else if (format == SQLiteDateTimeFormat.JulianDateReal)
         {
