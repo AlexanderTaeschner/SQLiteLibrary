@@ -1,6 +1,6 @@
 # SQLiteLibrary
 
-![Nuget](https://img.shields.io/nuget/v/DotNetSQLiteLibrary)
+[![Nuget](https://img.shields.io/nuget/v/DotNetSQLiteLibrary)](https://www.nuget.org/packages/DotNetSQLiteLibrary)
 
 This library provides a thin C# wrapper around the prebuilt windows DLL of the SQLite library https://sqlite.org. 
 

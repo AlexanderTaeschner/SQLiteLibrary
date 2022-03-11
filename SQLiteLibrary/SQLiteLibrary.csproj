@@ -14,9 +14,9 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageReleaseNotes>SQLite version 3.37.2. Patch 1.0.1: Correct handling of DateTime with UTC kind when using ISO8601Text format.</PackageReleaseNotes>
+		<PackageReleaseNotes>SQLite version 3.38.0.</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

@@ -17,9 +17,7 @@ public enum SQLiteDataType
     /// <summary>
     /// 64-bit IEEE floating point number datatype.
     /// </summary>
-#pragma warning disable CA1720 // Identifier contains type name
     Float,
-#pragma warning restore CA1720 // Identifier contains type name
 
     /// <summary>
     /// String datatype.

@@ -3,14 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLiteLibrary", "SQLiteLibrary\SQLiteLibrary.csproj", "{936B8368-0375-4E36-B41C-594189C8EF36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteLibrary", "SQLiteLibrary\SQLiteLibrary.csproj", "{936B8368-0375-4E36-B41C-594189C8EF36}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17F761C7-17EE-4878-8149-238ACC6C1CF5}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLiteLibraryTest", "SQLiteLibraryTest\SQLiteLibraryTest.csproj", "{02FD454E-721C-4EA1-994E-586B5E3D04F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLiteLibraryTest", "SQLiteLibraryTest\SQLiteLibraryTest.csproj", "{02FD454E-721C-4EA1-994E-586B5E3D04F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
