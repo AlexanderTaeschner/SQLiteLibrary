@@ -98,7 +98,7 @@ internal static class NativeMethods
 
     internal static byte[] ToUtf8(string s)
     {
-        int length = s_utf8Encoder.GetByteCount(s) + 1; // length including appended null char
+        int length = checked(s_utf8Encoder.GetByteCount(s) + 1); // length including appended null char
         byte[] bytes = new byte[length];
         int written = s_utf8Encoder.GetBytes(s, 0, s.Length, bytes, 0);
         if (written != length - 1)
@@ -111,26 +111,7 @@ internal static class NativeMethods
     }
 
     internal static string FromUtf8(IntPtr ptr)
-    {
-        if (ptr == IntPtr.Zero)
-        {
-            throw new ArgumentNullException(nameof(ptr));
-        }
-
-        int size = 0;
-        while (Marshal.ReadByte(ptr, size) != 0)
-        {
-            size++;
-        }
-
-        string str;
-        unsafe
-        {
-            str = s_utf8Encoder.GetString((byte*)ptr.ToPointer(), size);
-        }
-
-        return str;
-    }
+        => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
 
     [DllImport(SQLiteLibraryFileName)]
     internal static extern int sqlite3_open_v2(byte[] utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
