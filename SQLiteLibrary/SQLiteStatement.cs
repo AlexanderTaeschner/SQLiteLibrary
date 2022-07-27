@@ -117,9 +117,13 @@ public sealed class SQLiteStatement : IDisposable
             throw new ArgumentNullException(nameof(value));
         }
 
-        byte[]? bytes = NativeMethods.ToUtf8(value);
-        int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
-        NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
+        unsafe
+        {
+            byte* bytes = NativeMethods.ToUtf8BytePtr(value);
+            int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
+            NativeMethods.FreeUtf8BytePtr(bytes);
+            NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
+        }
     }
 
     /// <summary>
@@ -465,21 +469,28 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="sqlStatement">The SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
-    internal static SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
+    internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
     {
-        byte[]? utf8SQLStatement = NativeMethods.ToUtf8(sqlStatement);
-        int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out IntPtr tail);
-        NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
-        if (tail != IntPtr.Zero)
+        byte* utf8SQLStatement = NativeMethods.ToUtf8BytePtr(sqlStatement);
+        try
         {
-            string? remainder = NativeMethods.FromUtf8(tail);
-            if (!string.IsNullOrEmpty(remainder))
+            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
+            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
+            if (tail != null)
             {
-                throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                string remainder = NativeMethods.FromUtf8(tail);
+                if (!string.IsNullOrEmpty(remainder))
+                {
+                    throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                }
             }
-        }
 
-        return new SQLiteStatement(statementHandle, connectionHandle);
+            return new SQLiteStatement(statementHandle, connectionHandle);
+        }
+        finally
+        {
+            NativeMethods.FreeUtf8BytePtr(utf8SQLStatement);
+        }
     }
 
     private static double ToJulianDate(DateTime dateTime)
@@ -538,10 +549,11 @@ public sealed class SQLiteStatement : IDisposable
         return new DateTime(year, month, day, hour, minute, second, millisecond, DateTimeKind.Utc);
     }
 
-    private int GetParameterIndex(string parameterName)
+    private unsafe int GetParameterIndex(string parameterName)
     {
-        byte[]? ut8Text = NativeMethods.ToUtf8(parameterName);
+        byte* ut8Text = NativeMethods.ToUtf8BytePtr(parameterName);
         int idx = NativeMethods.sqlite3_bind_parameter_index(_handle, ut8Text);
+        NativeMethods.FreeUtf8BytePtr(ut8Text);
         return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{parameterName}' was not found in the prepared statement!") : idx;
     }
 

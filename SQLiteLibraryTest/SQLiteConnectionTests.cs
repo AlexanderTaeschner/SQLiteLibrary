@@ -32,6 +32,14 @@ public class SQLiteConnectionTests
     }
 
     [Fact]
+    public void Prepare_Statement_Throws_For_Multiple_Statements_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        var exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"));
+        Assert.Equal("SQL statement contained more than a single SQL command. Additional text: ' SELECT 2;'", exception.Message);
+    }
+
+    [Fact]
     public void ExecuteNonQuery_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
