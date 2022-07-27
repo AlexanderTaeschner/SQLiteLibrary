@@ -62,7 +62,6 @@ internal static class NativeMethods
     internal static readonly IntPtr SQLITE_TRANSIENT = new(-1);
 
     private const string SQLiteLibraryFileName = "sqlite3.dll";
-    private static readonly Encoding s_utf8Encoder = Encoding.UTF8;
 
     static NativeMethods()
     {
@@ -96,25 +95,32 @@ internal static class NativeMethods
         }
     }
 
-    internal static byte[] ToUtf8(string s)
+    internal static unsafe byte* ToUtf8BytePtr(string s)
     {
-        int length = s_utf8Encoder.GetByteCount(s) + 1; // length including appended null char
-        byte[] bytes = new byte[length];
-        int written = s_utf8Encoder.GetBytes(s, 0, s.Length, bytes, 0);
-        if (written != length - 1)
+        if (s is null)
         {
-            throw new NotSupportedException();
+            return null;
         }
 
-        bytes[^1] = 0;
-        return bytes;
+        int exactByteCount = checked(Encoding.UTF8.GetByteCount(s) + 1); // + 1 for null terminator
+        byte* mem = (byte*)Marshal.AllocCoTaskMem(exactByteCount);
+        Span<byte> buffer = new(mem, exactByteCount);
+
+        int byteCount = Encoding.UTF8.GetBytes(s, buffer);
+        buffer[byteCount] = 0; // null-terminate
+        return mem;
     }
+
+    internal static unsafe void FreeUtf8BytePtr(byte* ptr)
+        => Marshal.FreeCoTaskMem((IntPtr)ptr);
+
+    internal static unsafe string FromUtf8(byte* ptr) => FromUtf8((IntPtr)ptr);
 
     internal static string FromUtf8(IntPtr ptr)
         => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
 
     [DllImport(SQLiteLibraryFileName)]
-    internal static extern int sqlite3_open_v2(byte[] utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
+    internal static unsafe extern int sqlite3_open_v2(byte* utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
 
     [DllImport(SQLiteLibraryFileName)]
     internal static extern int sqlite3_close(IntPtr connectionHandle);
@@ -135,7 +141,7 @@ internal static class NativeMethods
     internal static extern IntPtr sqlite3_errstr(int resultCode);
 
     [DllImport(SQLiteLibraryFileName)]
-    internal static extern int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte[] utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out IntPtr tail);
+    internal static unsafe extern int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out byte* tail);
 
     [DllImport(SQLiteLibraryFileName)]
     internal static extern int sqlite3_finalize(IntPtr statementHandle);
@@ -156,10 +162,10 @@ internal static class NativeMethods
     internal static extern int sqlite3_bind_null(SQLiteStatementHandle statementHandle, int index);
 
     [DllImport(SQLiteLibraryFileName)]
-    internal static extern int sqlite3_bind_text(SQLiteStatementHandle statementHandle, int index, byte[] utf8Text, int utf8TextByteLength, IntPtr destructor);
+    internal static unsafe extern int sqlite3_bind_text(SQLiteStatementHandle statementHandle, int index, byte* utf8Text, int utf8TextByteLength, IntPtr destructor);
 
     [DllImport(SQLiteLibraryFileName)]
-    internal static extern int sqlite3_bind_parameter_index(SQLiteStatementHandle statementHandle, byte[] utf8ParameterName);
+    internal static unsafe extern int sqlite3_bind_parameter_index(SQLiteStatementHandle statementHandle, byte* utf8ParameterName);
 
     [DllImport(SQLiteLibraryFileName)]
     internal static extern int sqlite3_bind_zeroblob(SQLiteStatementHandle statementHandle, int index, int blobLength);

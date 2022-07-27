@@ -144,15 +144,16 @@ public sealed class SQLiteConnection : IDisposable
         _handle.Dispose();
     }
 
-    private static SQLiteConnection Create(string fileName, int flags)
+    private static unsafe SQLiteConnection Create(string fileName, int flags)
     {
         if (fileName is null)
         {
             throw new ArgumentNullException(nameof(fileName));
         }
 
-        byte[]? utf8Filename = NativeMethods.ToUtf8(fileName);
+        byte* utf8Filename = NativeMethods.ToUtf8BytePtr(fileName);
         int result = NativeMethods.sqlite3_open_v2(utf8Filename, out SQLiteConnectionHandle connectionHandle, flags, IntPtr.Zero);
+        NativeMethods.FreeUtf8BytePtr(utf8Filename);
         NativeMethods.CheckResult(result, "sqlite3_open", null);
 
         result = NativeMethods.sqlite3_extended_result_codes(connectionHandle, 1);
