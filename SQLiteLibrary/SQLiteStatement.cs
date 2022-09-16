@@ -156,6 +156,17 @@ public sealed class SQLiteStatement : IDisposable
     /// <summary>
     /// Binds the parameter with a value.
     /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> value)
+    {
+        int idx = GetParameterIndex(parameterName);
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
     /// <param name="index">Index of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(int index, string value)
@@ -171,6 +182,22 @@ public sealed class SQLiteStatement : IDisposable
             int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
             NativeMethods.FreeUtf8BytePtr(bytes);
             NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
+        }
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="index">Index of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(int index, ReadOnlySpan<byte> value)
+    {
+        unsafe
+        {
+            fixed (byte* bytes = value)
+            {
+                int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
+            }
         }
     }
 

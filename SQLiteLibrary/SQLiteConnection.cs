@@ -97,6 +97,16 @@ public sealed class SQLiteConnection : IDisposable
     }
 
     /// <summary>
+    /// Prepare and execute a non query SQL statement.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL statement.</param>
+    public void ExecuteNonQuery(ReadOnlySpan<byte> sqlStatement)
+    {
+        using SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
+        stmt.DoneStep();
+    }
+
+    /// <summary>
     /// Prepare and execute a scalar query SQL statement and return the contents of the first column.
     /// </summary>
     /// <param name="sqlStatement">The SQL statement.</param>
@@ -109,6 +119,24 @@ public sealed class SQLiteConnection : IDisposable
             throw new ArgumentNullException(nameof(sqlStatement));
         }
 
+        string value;
+        using (SQLiteStatement stmt = DoPrepareStatement(sqlStatement))
+        {
+            stmt.NewRowStep();
+            value = stmt.GetColumnStringValue(0);
+            stmt.DoneStep();
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// Prepare and execute a scalar query SQL statement and return the contents of the first column.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <returns>The contents of the first result column.</returns>
+    public string ExecuteScalarStringQuery(ReadOnlySpan<byte> sqlStatement)
+    {
         string value;
         using (SQLiteStatement stmt = DoPrepareStatement(sqlStatement))
         {

@@ -26,8 +26,10 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+#pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => conn.PrepareStatement((string)null!));
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;");
+#pragma warning restore DNSQLL001 // Type or member is obsolete
         Assert.NotNull(stmt);
     }
 
@@ -43,7 +45,9 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Throws_For_Multiple_Statements_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+#pragma warning disable DNSQLL001 // Type or member is obsolete
         SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"));
+#pragma warning restore DNSQLL001 // Type or member is obsolete
         Assert.Equal("SQL statement contained more than a single SQL command. Additional text: ' SELECT 2;'", exception.Message);
     }
 
@@ -58,6 +62,7 @@ public class SQLiteConnectionTests
     [Fact]
     public void ExecuteNonQuery_Works()
     {
+#pragma warning disable DNSQLL001 // Type or member is obsolete
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);");
         conn.ExecuteNonQuery("INSERT INTO t VALUES (42);");
@@ -67,13 +72,38 @@ public class SQLiteConnectionTests
         int value = stmt.GetColumnIntegerValue(0);
         Assert.Equal(42, value);
         stmt.DoneStep();
+#pragma warning restore DNSQLL001 // Type or member is obsolete
+    }
+
+    [Fact]
+    public void ExecuteNonQuery_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
+        conn.ExecuteNonQuery("INSERT INTO t VALUES (42);"u8);
+        long rowid = conn.GetLastInsertRowid();
+        Assert.Equal(1, rowid);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;"u8);
+        int value = stmt.GetColumnIntegerValue(0);
+        Assert.Equal(42, value);
+        stmt.DoneStep();
     }
 
     [Fact]
     public void ExecuteScalarStringQuery_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+#pragma warning disable DNSQLL001 // Type or member is obsolete
         string value = conn.ExecuteScalarStringQuery("SELECT 'Adams_42';");
+#pragma warning restore DNSQLL001 // Type or member is obsolete
+        Assert.Equal("Adams_42", value);
+    }
+
+    [Fact]
+    public void ExecuteScalarStringQuery_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        string value = conn.ExecuteScalarStringQuery("SELECT 'Adams_42';"u8);
         Assert.Equal("Adams_42", value);
     }
 
@@ -88,8 +118,8 @@ public class SQLiteConnectionTests
 
         using (var conn = SQLiteConnection.CreateNewOrOpenExistingDb(fileName))
         {
-            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);");
-            conn.ExecuteNonQuery("INSERT INTO t VALUES (42);");
+            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
+            conn.ExecuteNonQuery("INSERT INTO t VALUES (42);"u8);
             long rowid = conn.GetLastInsertRowid();
             Assert.Equal(1, rowid);
         }
@@ -98,7 +128,7 @@ public class SQLiteConnectionTests
 
         using (var conn = SQLiteConnection.OpenExistingDbReadOnly(fileName))
         {
-            using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;");
+            using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;"u8);
             int value = stmt.GetColumnIntegerValue(0);
             Assert.Equal(42, value);
             stmt.DoneStep();

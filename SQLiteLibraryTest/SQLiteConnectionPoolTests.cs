@@ -28,7 +28,7 @@ public class SQLiteConnectionPoolTests
 
         using (var conn = SQLiteConnection.CreateNewOrOpenExistingDb(FileName))
         {
-            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);");
+            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
         }
 
         Assert.True(File.Exists(FileName));
@@ -46,7 +46,7 @@ public class SQLiteConnectionPoolTests
             SQLitePooledStatement<SQLiteConnectionPoolTestStatements> pooledInsertStmt = connectionPool.Rent(SQLiteConnectionPoolTestStatements.InsertValue);
 
             SQLiteStatement insertStmt = pooledInsertStmt.Statement;
-            insertStmt.BindParameter("@value", i);
+            insertStmt.BindParameter("@value"u8, i);
 
             connectionPool.Return(pooledInsertStmt);
         }
