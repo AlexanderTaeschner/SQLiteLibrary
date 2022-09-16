@@ -42,6 +42,17 @@ public sealed class SQLiteStatement : IDisposable
     /// <summary>
     /// Binds the parameter with a value.
     /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, double value)
+    {
+        int idx = GetParameterIndex(parameterName);
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
     /// <param name="index">Index of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(int index, double value)
@@ -58,6 +69,17 @@ public sealed class SQLiteStatement : IDisposable
     public void BindParameter(string parameterName, int value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, int value)
+    {
+        int idx = GetParameterIndex(parameterName);
         BindParameter(idx, value);
     }
 
@@ -86,6 +108,17 @@ public sealed class SQLiteStatement : IDisposable
     /// <summary>
     /// Binds the parameter with a value.
     /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, long value)
+    {
+        int idx = GetParameterIndex(parameterName);
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
     /// <param name="index">Index of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(int index, long value)
@@ -102,6 +135,17 @@ public sealed class SQLiteStatement : IDisposable
     public void BindParameter(string parameterName, string value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, string value)
+    {
+        int idx = GetParameterIndex(parameterName);
         BindParameter(idx, value);
     }
 
@@ -134,6 +178,17 @@ public sealed class SQLiteStatement : IDisposable
     public void BindParameter(string parameterName, byte[] value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, byte[] value)
+    {
+        int idx = GetParameterIndex(parameterName);
         BindParameter(idx, value);
     }
 
@@ -195,6 +250,18 @@ public sealed class SQLiteStatement : IDisposable
     }
 
     /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    /// <param name="format">Database representation format of the value.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, DateTime value, SQLiteDateTimeFormat format)
+    {
+        int idx = GetParameterIndex(parameterName);
+        BindParameter(idx, value, format);
+    }
+
+    /// <summary>
     /// Binds the parameter with a NULL value.
     /// </summary>
     /// <param name="index">Index of the parameter.</param>
@@ -211,6 +278,16 @@ public sealed class SQLiteStatement : IDisposable
     public void BindNullToParameter(string parameterName)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        BindNullToParameter(idx);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a NULL value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    public void BindNullToParameter(ReadOnlySpan<byte> parameterName)
+    {
+        int idx = GetParameterIndex(parameterName);
         BindNullToParameter(idx);
     }
 
@@ -476,7 +553,7 @@ public sealed class SQLiteStatement : IDisposable
         {
             int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
             NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
-            if (tail != null)
+            if (*tail != 0)
             {
                 string remainder = NativeMethods.FromUtf8(tail);
                 if (!string.IsNullOrEmpty(remainder))
@@ -490,6 +567,32 @@ public sealed class SQLiteStatement : IDisposable
         finally
         {
             NativeMethods.FreeUtf8BytePtr(utf8SQLStatement);
+        }
+    }
+
+    /// <summary>
+    /// Creates a SQLite statement.
+    /// </summary>
+    /// <param name="connectionHandle">SQLite connection handle.</param>
+    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
+    /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, ReadOnlySpan<byte> sqlStatement)
+    {
+        fixed (byte* utf8SQLStatement = sqlStatement)
+        {
+            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
+            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
+            if (*tail != 0)
+            {
+                string remainder = NativeMethods.FromUtf8(tail);
+                if (!string.IsNullOrEmpty(remainder))
+                {
+                    throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                }
+            }
+
+            return new SQLiteStatement(statementHandle, connectionHandle);
         }
     }
 
@@ -555,6 +658,15 @@ public sealed class SQLiteStatement : IDisposable
         int idx = NativeMethods.sqlite3_bind_parameter_index(_handle, ut8Text);
         NativeMethods.FreeUtf8BytePtr(ut8Text);
         return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{parameterName}' was not found in the prepared statement!") : idx;
+    }
+
+    private unsafe int GetParameterIndex(ReadOnlySpan<byte> parameterName)
+    {
+        fixed (byte* ut8Text = parameterName)
+        {
+            int idx = NativeMethods.sqlite3_bind_parameter_index(_handle, ut8Text);
+            return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{NativeMethods.FromUtf8(ut8Text)}' was not found in the prepared statement!") : idx;
+        }
     }
 
     private double DoGetColumnDoubleValue(int columnIndex, SQLiteDataType type)

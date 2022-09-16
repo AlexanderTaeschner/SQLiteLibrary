@@ -71,6 +71,15 @@ public sealed class SQLiteConnection : IDisposable
         => sqlStatement is null ? throw new ArgumentNullException(nameof(sqlStatement)) : DoPrepareStatement(sqlStatement);
 
     /// <summary>
+    /// Prepare a SQLite statement.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
+    /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    public SQLiteStatement PrepareStatement(ReadOnlySpan<byte> sqlStatement)
+        => DoPrepareStatement(sqlStatement);
+
+    /// <summary>
     /// Prepare and execute a non query SQL statement.
     /// </summary>
     /// <param name="sqlStatement">The SQL statement.</param>
@@ -127,6 +136,19 @@ public sealed class SQLiteConnection : IDisposable
     }
 
     /// <summary>
+    /// Prepare a SQLite statement and execute step expecting new row.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
+    /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    public SQLiteStatement PrepareStatementAndNewRowStep(ReadOnlySpan<byte> sqlStatement)
+    {
+        SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
+        stmt.NewRowStep();
+        return stmt;
+    }
+
+    /// <summary>
     /// Gets the ROWID of the last row insert from the database connection which invoked the function.
     /// </summary>
     /// <returns>The ROWID of the last row insert.</returns>
@@ -163,6 +185,13 @@ public sealed class SQLiteConnection : IDisposable
     }
 
     private SQLiteStatement DoPrepareStatement(string sqlStatement)
+    {
+        var stmt = SQLiteStatement.Create(_handle, sqlStatement);
+        _statements.Add(stmt);
+        return stmt;
+    }
+
+    private SQLiteStatement DoPrepareStatement(ReadOnlySpan<byte> sqlStatement)
     {
         var stmt = SQLiteStatement.Create(_handle, sqlStatement);
         _statements.Add(stmt);

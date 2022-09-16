@@ -21,10 +21,32 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void Step_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;"u8);
+        SQLiteStepResult res = stmt.Step();
+        Assert.Equal(SQLiteStepResult.NewRow, res);
+
+        res = stmt.Step();
+        Assert.Equal(SQLiteStepResult.Done, res);
+    }
+
+    [Fact]
     public void Step_After_PrepareStatementAndNewRowStep_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 1;");
+
+        SQLiteStepResult res = stmt.Step();
+        Assert.Equal(SQLiteStepResult.Done, res);
+    }
+
+    [Fact]
+    public void Step_After_PrepareStatementAndNewRowStep_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 1;"u8);
 
         SQLiteStepResult res = stmt.Step();
         Assert.Equal(SQLiteStepResult.Done, res);
@@ -163,8 +185,23 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, 4.2));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 4.2));
         stmt.BindParameter("@value", 4.2);
+
+        stmt.NewRowStep();
+
+        double value = stmt.GetColumnDoubleValue(0);
+        Assert.Equal(4.2, value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDoubleValue_NamedParameter_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindParameter("@value"u8, 4.2);
 
         stmt.NewRowStep();
 
@@ -196,7 +233,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, 42));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 42));
         stmt.BindParameter("@value", 42);
 
         stmt.NewRowStep();
@@ -229,7 +266,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, 4242424242L));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 4242424242L));
         stmt.BindParameter("@value", 4242424242L);
 
         stmt.NewRowStep();
@@ -263,7 +300,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, "Adams_42"));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, "Adams_42"));
         stmt.BindParameter("@value", "Adams_42");
 
         stmt.NewRowStep();
@@ -316,7 +353,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, new byte[] { 0xAF, 0x42, 0xFA }));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, new byte[] { 0xAF, 0x42, 0xFA }));
         stmt.BindParameter("@value", new byte[] { 0xAF, 0x42, 0xFA });
 
         stmt.NewRowStep();
@@ -414,7 +451,7 @@ public class SQLiteStatementTests
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(null!, dateTime, SQLiteDateTimeFormat.ISO8601Text));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, dateTime, SQLiteDateTimeFormat.ISO8601Text));
         stmt.BindParameter("@value", dateTime, SQLiteDateTimeFormat.ISO8601Text);
 
         stmt.NewRowStep();
@@ -498,7 +535,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;");
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindNullToParameter(null!));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindNullToParameter((string)null!));
         stmt.BindNullToParameter("@value");
 
         stmt.NewRowStep();

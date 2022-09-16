@@ -26,8 +26,16 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        Assert.Throws<ArgumentNullException>(() => conn.PrepareStatement(null!));
+        Assert.Throws<ArgumentNullException>(() => conn.PrepareStatement((string)null!));
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;");
+        Assert.NotNull(stmt);
+    }
+
+    [Fact]
+    public void Prepare_Statement_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;"u8);
         Assert.NotNull(stmt);
     }
 
@@ -35,7 +43,15 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Throws_For_Multiple_Statements_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        var exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"));
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"));
+        Assert.Equal("SQL statement contained more than a single SQL command. Additional text: ' SELECT 2;'", exception.Message);
+    }
+
+    [Fact]
+    public void Prepare_Statement_Throws_For_Multiple_Statements_U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"u8));
         Assert.Equal("SQL statement contained more than a single SQL command. Additional text: ' SELECT 2;'", exception.Message);
     }
 
