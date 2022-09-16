@@ -21,6 +21,10 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(APPVEYOR)' == 'True'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
 
 	<ItemGroup>
 	  <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
