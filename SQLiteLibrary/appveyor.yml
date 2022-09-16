@@ -1,0 +1,25 @@
+# common configuration for ALL branches
+image: Visual Studio 2022
+
+build:
+  project: SQLiteLibrary.sln
+
+platform:
+  - Any CPU
+
+configuration:
+  - Release
+
+branches:
+  only:
+  - main
+
+version: 1.0.3.2-{build}
+
+deploy:
+  provider: NuGet
+  api_key:
+    secure: 8qVvrQoFFNnowkCisYGDIaRoVJcadh3N1GQiaFPk57PVl4RQ6a1m6JnGtvsj7zf7
+  skip_symbols: false
+  artifact: /.*(\.|\.s)nupkg/
+

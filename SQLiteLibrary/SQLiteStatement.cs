@@ -33,6 +33,7 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, double value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -66,6 +67,7 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, int value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -99,6 +101,7 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, long value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -132,6 +135,7 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, string value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -175,6 +179,7 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, byte[] value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -243,6 +248,7 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
     /// <param name="format">Database representation format of the value.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, DateTime value, SQLiteDateTimeFormat format)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -275,6 +281,7 @@ public sealed class SQLiteStatement : IDisposable
     /// Binds the parameter with a NULL value.
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindNullToParameter(string parameterName)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
@@ -546,6 +553,7 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="sqlStatement">The SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
     {
         byte* utf8SQLStatement = NativeMethods.ToUtf8BytePtr(sqlStatement);
@@ -652,6 +660,7 @@ public sealed class SQLiteStatement : IDisposable
         return new DateTime(year, month, day, hour, minute, second, millisecond, DateTimeKind.Utc);
     }
 
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     private unsafe int GetParameterIndex(string parameterName)
     {
         byte* ut8Text = NativeMethods.ToUtf8BytePtr(parameterName);

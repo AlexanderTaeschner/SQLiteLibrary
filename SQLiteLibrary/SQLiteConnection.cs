@@ -67,6 +67,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <param name="sqlStatement">The SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public SQLiteStatement PrepareStatement(string sqlStatement)
         => sqlStatement is null ? throw new ArgumentNullException(nameof(sqlStatement)) : DoPrepareStatement(sqlStatement);
 
@@ -83,6 +84,7 @@ public sealed class SQLiteConnection : IDisposable
     /// Prepare and execute a non query SQL statement.
     /// </summary>
     /// <param name="sqlStatement">The SQL statement.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void ExecuteNonQuery(string sqlStatement)
     {
         if (sqlStatement is null)
@@ -99,6 +101,7 @@ public sealed class SQLiteConnection : IDisposable
     /// </summary>
     /// <param name="sqlStatement">The SQL statement.</param>
     /// <returns>The contents of the first result column.</returns>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public string ExecuteScalarStringQuery(string sqlStatement)
     {
         if (sqlStatement is null)
@@ -123,6 +126,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <param name="sqlStatement">The SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public SQLiteStatement PrepareStatementAndNewRowStep(string sqlStatement)
     {
         if (sqlStatement is null)
@@ -184,6 +188,7 @@ public sealed class SQLiteConnection : IDisposable
         return new SQLiteConnection(connectionHandle);
     }
 
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     private SQLiteStatement DoPrepareStatement(string sqlStatement)
     {
         var stmt = SQLiteStatement.Create(_handle, sqlStatement);
