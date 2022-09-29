@@ -38,13 +38,14 @@ public class SQLiteException : Exception
     {
     }
 
-    private SQLiteException(string message, int resultCode, string nativeMethod, string resultCodeName, string nativeErrorMessage)
+    private SQLiteException(string message, int resultCode, string nativeMethod, string resultCodeName, string nativeErrorMessage, string? sqlStatement = null)
         : base(message)
     {
         ResultCode = resultCode;
         NativeMethod = nativeMethod;
         ResultCodeName = resultCodeName;
         NativeErrorMessage = nativeErrorMessage;
+        SqlStatement = sqlStatement;
     }
 
     /// <summary>
@@ -67,7 +68,12 @@ public class SQLiteException : Exception
     /// </summary>
     public string NativeErrorMessage { get; } = string.Empty;
 
-    internal static SQLiteException Create(int resultCode, string nativeMethod, SQLiteConnectionHandle? connectionHandle)
+    /// <summary>
+    /// Gets the text used as SQL statement calling the native method.
+    /// </summary>
+    public string? SqlStatement { get; }
+
+    internal static SQLiteException Create(int resultCode, string nativeMethod, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
     {
         IntPtr utf8Text = NativeMethods.sqlite3_errstr(resultCode);
         string? resultCodeName = NativeMethods.FromUtf8(utf8Text);
@@ -79,6 +85,6 @@ public class SQLiteException : Exception
         }
 
         string? message = $"SQLiteLibrary.SQLiteException: Native method {nativeMethod} returned error code {resultCodeName}({resultCode}): '{nativeErrorMessage}'!";
-        return new SQLiteException(message, resultCode, nativeMethod, resultCodeName, nativeErrorMessage);
+        return new SQLiteException(message, resultCode, nativeMethod, resultCodeName, nativeErrorMessage, sqlStatement);
     }
 }

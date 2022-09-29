@@ -14,7 +14,7 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.1.0.0-preview-2.1</Version>
+		<Version>1.1.0.0-preview-3</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<PackageReleaseNotes>SQLite version 3.39.2. Net 7. Obsolete string methods in favor of UTF8 string mezthods.</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>

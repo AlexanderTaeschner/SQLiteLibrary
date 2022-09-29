@@ -617,7 +617,7 @@ public sealed class SQLiteStatement : IDisposable
         fixed (byte* utf8SQLStatement = sqlStatement)
         {
             int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
-            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
+            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
             if (*tail != 0)
             {
                 string remainder = NativeMethods.FromUtf8(tail);
