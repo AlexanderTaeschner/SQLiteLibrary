@@ -2,6 +2,8 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Text;
+
 namespace SQLiteLibrary;
 
 /// <summary>
@@ -11,7 +13,7 @@ namespace SQLiteLibrary;
 public sealed class SQLiteConnectionPool<TEnum> : IDisposable
     where TEnum : Enum
 {
-    private readonly IReadOnlyDictionary<TEnum, string> _sqlTextDictionary;
+    private readonly IReadOnlyDictionary<TEnum, byte[]> _sqlTextDictionary;
     private readonly Func<SQLiteConnection> _createSQLiteConnection;
 
     private readonly object _lock = new();
@@ -31,7 +33,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
         IReadOnlyDictionary<TEnum, string> sqlTextDictionary,
         Func<SQLiteConnection> createSQLiteConnection)
     {
-        _sqlTextDictionary = sqlTextDictionary;
+        _sqlTextDictionary = new Dictionary<TEnum, byte[]>(sqlTextDictionary.Select(kvp => new KeyValuePair<TEnum, byte[]>(kvp.Key, Encoding.UTF8.GetBytes(kvp.Value))));
         _createSQLiteConnection = createSQLiteConnection;
     }
 
