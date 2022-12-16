@@ -31,6 +31,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Include="..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	
+	<ItemGroup>
 		<None Include="x86\sqlite3.dll" Pack="true" PackagePath="runtimes\win-x86\native">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
