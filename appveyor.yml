@@ -5,7 +5,7 @@ before_build:
   - nuget restore
 
 build:
-  project: SQLiteLibrary.sln
+  project: SQLiteLibrary\SQLiteLibrary.csproj
 
 platform:
   - Any CPU
