@@ -1,6 +1,9 @@
 # common configuration for ALL branches
 image: Visual Studio 2022
 
+before_build:
+  - nuget restore
+
 build:
   project: SQLiteLibrary.sln
 
