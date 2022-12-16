@@ -108,6 +108,14 @@ public class SQLiteConnectionTests
     }
 
     [Fact]
+    public void Expected_Version_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        string value = conn.ExecuteScalarStringQuery("SELECT sqlite_version();"u8);
+        Assert.Equal("3.40.0", value);
+    }
+
+    [Fact]
     public void Open_File_Works()
     {
         string fileName = "SQLiteConnectionTests_TestDb.sqlite";
