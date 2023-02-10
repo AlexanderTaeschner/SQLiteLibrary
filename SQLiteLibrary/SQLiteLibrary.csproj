@@ -11,12 +11,13 @@
 		<Authors>Alexander Täschner</Authors>
 		<Description>Thin C# wrapper of the prebuilt windows DLL of the SQLite library.</Description>
 		<Copyright>Copyright (c) Alexander Täschner 2022</Copyright>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.2.0.0</Version>
+		<Version>1.2.1.0</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageReleaseNotes>SQLite version 3.40.0.</PackageReleaseNotes>
+		<PackageReleaseNotes>SQLite version 3.40.1.</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
