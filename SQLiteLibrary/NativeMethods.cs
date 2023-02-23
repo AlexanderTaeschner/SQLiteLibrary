@@ -68,6 +68,11 @@ internal static partial class NativeMethods
         string? path = new Uri(typeof(NativeMethods).Assembly.Location).LocalPath;
         string? folder = Path.GetDirectoryName(path) ?? throw new FileNotFoundException("Could not load native SQLite library!");
 
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Native SQLite library is only included for Windows!");
+        }
+
         string? subFolder = Environment.Is64BitProcess ? @"runtimes\win-x64\native" : @"runtimes\win-x86\native";
 
         IntPtr res = LoadLibrary(Path.Combine(folder, subFolder, SQLiteLibraryFileName));
