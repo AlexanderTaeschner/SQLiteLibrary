@@ -156,11 +156,7 @@ public class SQLiteStatementTests
         Assert.Equal(0xFA, value[2]);
         byte[]? value2 = stmt.GetColumnNullableBlobValue(0);
 
-        if (value2 is null)
-        {
-            throw new InvalidOperationException();
-        }
-
+        Assert.NotNull(value2);
         Assert.Equal(3, value2.Length);
         Assert.Equal(0xAF, value2[0]);
         Assert.Equal(0x42, value2[1]);

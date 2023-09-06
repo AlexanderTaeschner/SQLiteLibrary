@@ -15,9 +15,9 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.2.3.0</Version>
+		<Version>1.2.4.0</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageReleaseNotes>Native SQLite version 3.42.0.</PackageReleaseNotes>
+		<PackageReleaseNotes>Native SQLite version 3.43.0.</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
