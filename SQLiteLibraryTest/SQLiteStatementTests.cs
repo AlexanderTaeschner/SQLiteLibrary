@@ -6,6 +6,7 @@ using SQLiteLibrary;
 using Xunit;
 
 namespace SQLiteLibraryTest;
+
 public class SQLiteStatementTests
 {
     [Fact]
