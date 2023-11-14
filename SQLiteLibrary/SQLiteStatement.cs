@@ -171,10 +171,7 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(int index, string value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         unsafe
         {
@@ -231,10 +228,7 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(int index, byte[] value)
     {
-        if (value is null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         int result = NativeMethods.sqlite3_bind_blob(_handle, index, value, value.Length, NativeMethods.SQLITE_TRANSIENT);
         NativeMethods.CheckResult(result, "sqlite3_bind_blob", _connectionHandle);
@@ -753,7 +747,7 @@ public sealed class SQLiteStatement : IDisposable
 
         if (size == 0)
         {
-            return Array.Empty<byte>();
+            return [];
         }
 
         byte[]? bytes = new byte[size];

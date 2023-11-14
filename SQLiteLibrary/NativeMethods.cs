@@ -161,7 +161,7 @@ internal static partial class NativeMethods
     internal static partial int sqlite3_finalize(IntPtr statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
-    internal static partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, byte[] value, int valueByteLength, IntPtr destructor);
+    internal static partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, [In] byte[] value, int valueByteLength, IntPtr destructor);
 
     [LibraryImport(SQLiteLibraryFileName)]
     internal static partial int sqlite3_bind_double(SQLiteStatementHandle statementHandle, int index, double value);

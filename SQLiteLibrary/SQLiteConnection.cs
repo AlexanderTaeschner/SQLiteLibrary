@@ -10,7 +10,7 @@ namespace SQLiteLibrary;
 public sealed class SQLiteConnection : IDisposable
 {
     private readonly SQLiteConnectionHandle _handle;
-    private readonly List<SQLiteStatement> _statements = new();
+    private readonly List<SQLiteStatement> _statements = [];
 
     private SQLiteConnection(SQLiteConnectionHandle connectionHandle) => _handle = connectionHandle;
 
@@ -87,10 +87,7 @@ public sealed class SQLiteConnection : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void ExecuteNonQuery(string sqlStatement)
     {
-        if (sqlStatement is null)
-        {
-            throw new ArgumentNullException(nameof(sqlStatement));
-        }
+        ArgumentNullException.ThrowIfNull(sqlStatement);
 
         using SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
         stmt.DoneStep();
@@ -114,10 +111,7 @@ public sealed class SQLiteConnection : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public string ExecuteScalarStringQuery(string sqlStatement)
     {
-        if (sqlStatement is null)
-        {
-            throw new ArgumentNullException(nameof(sqlStatement));
-        }
+        ArgumentNullException.ThrowIfNull(sqlStatement);
 
         string value;
         using (SQLiteStatement stmt = DoPrepareStatement(sqlStatement))
@@ -157,10 +151,7 @@ public sealed class SQLiteConnection : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public SQLiteStatement PrepareStatementAndNewRowStep(string sqlStatement)
     {
-        if (sqlStatement is null)
-        {
-            throw new ArgumentNullException(nameof(sqlStatement));
-        }
+        ArgumentNullException.ThrowIfNull(sqlStatement);
 
         SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
         stmt.NewRowStep();
@@ -200,10 +191,7 @@ public sealed class SQLiteConnection : IDisposable
 
     private static unsafe SQLiteConnection Create(string fileName, int flags)
     {
-        if (fileName is null)
-        {
-            throw new ArgumentNullException(nameof(fileName));
-        }
+        ArgumentNullException.ThrowIfNull(fileName);
 
         byte* utf8Filename = NativeMethods.ToUtf8BytePtr(fileName);
         int result = NativeMethods.sqlite3_open_v2(utf8Filename, out SQLiteConnectionHandle connectionHandle, flags, IntPtr.Zero);

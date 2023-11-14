@@ -18,11 +18,9 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
 
     private readonly object _lock = new();
 
-    private readonly Dictionary<TEnum, List<SQLitePooledStatement<TEnum>>> _pool
-        = new();
+    private readonly Dictionary<TEnum, List<SQLitePooledStatement<TEnum>>> _pool = [];
 
-    private readonly List<SQLitePooledStatement<TEnum>> _rentedStatements
-        = new();
+    private readonly List<SQLitePooledStatement<TEnum>> _rentedStatements = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SQLiteConnectionPool{TEnum}"/> class.
@@ -50,7 +48,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
         {
             if (!_pool.TryGetValue(sqlTextKey, out List<SQLitePooledStatement<TEnum>>? objList))
             {
-                objList = new List<SQLitePooledStatement<TEnum>>();
+                objList = [];
                 _pool.Add(sqlTextKey, objList);
             }
 
@@ -77,10 +75,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
     /// <param name="rentedStatement">The rented statement.</param>
     public void Return(SQLitePooledStatement<TEnum> rentedStatement)
     {
-        if (rentedStatement is null)
-        {
-            throw new ArgumentNullException(nameof(rentedStatement));
-        }
+        ArgumentNullException.ThrowIfNull(rentedStatement);
 
         lock (_lock)
         {
@@ -89,7 +84,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
 
             if (!_pool.TryGetValue(rentedStatement.SQLTextKey, out List<SQLitePooledStatement<TEnum>>? objList))
             {
-                objList = new List<SQLitePooledStatement<TEnum>>();
+                objList = [];
                 _pool.Add(rentedStatement.SQLTextKey, objList);
             }
 
