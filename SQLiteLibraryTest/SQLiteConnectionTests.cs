@@ -43,6 +43,19 @@ public class SQLiteConnectionTests
     }
 
     [Fact]
+    public void Prepare_Statement_Throws_On_SQL_Error_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT * FROM t;"u8));
+        Assert.Equal("SELECT * FROM t;", exception.SqlStatement);
+        Assert.Equal(1, exception.ResultCode);
+        Assert.Equal("SQL logic error", exception.ResultCodeName);
+        Assert.Equal("sqlite3_prepare_v2", exception.NativeMethod);
+        Assert.Equal("no such table: t", exception.NativeErrorMessage);
+        Assert.Equal("SQLiteLibrary.SQLiteException: Native method sqlite3_prepare_v2 returned error code SQL logic error(1): 'no such table: t'!", exception.Message);
+    }
+
+    [Fact]
     public void Prepare_Statement_Throws_For_Multiple_Statements_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();

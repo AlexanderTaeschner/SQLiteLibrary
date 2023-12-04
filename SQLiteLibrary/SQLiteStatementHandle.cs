@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace SQLiteLibrary;
 
-internal class SQLiteStatementHandle : SafeHandle
+internal sealed class SQLiteStatementHandle : SafeHandle
 {
     public SQLiteStatementHandle()
     : base(IntPtr.Zero, true)

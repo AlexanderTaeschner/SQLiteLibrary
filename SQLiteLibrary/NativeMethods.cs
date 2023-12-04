@@ -134,92 +134,122 @@ internal static partial class NativeMethods
         => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static unsafe partial int sqlite3_open_v2(byte* utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_close(IntPtr connectionHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_busy_timeout(SQLiteConnectionHandle connectionHandle, int timeoutInMilliSeconds);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_extended_result_codes(SQLiteConnectionHandle connectionHandle, int onoff);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial long sqlite3_last_insert_rowid(SQLiteConnectionHandle connectionHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_errmsg(SQLiteConnectionHandle connectionHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_errstr(int resultCode);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static unsafe partial int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out byte* tail);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_finalize(IntPtr statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, [In] byte[] value, int valueByteLength, IntPtr destructor);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_double(SQLiteStatementHandle statementHandle, int index, double value);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_int(SQLiteStatementHandle statementHandle, int index, int value);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_int64(SQLiteStatementHandle statementHandle, int index, long value);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_null(SQLiteStatementHandle statementHandle, int index);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static unsafe partial int sqlite3_bind_text(SQLiteStatementHandle statementHandle, int index, byte* utf8Text, int utf8TextByteLength, IntPtr destructor);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static unsafe partial int sqlite3_bind_parameter_index(SQLiteStatementHandle statementHandle, byte* utf8ParameterName);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_zeroblob(SQLiteStatementHandle statementHandle, int index, int blobLength);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_zeroblob64(SQLiteStatementHandle statementHandle, int index, long blobLength);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_step(SQLiteStatementHandle statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_reset(SQLiteStatementHandle statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_column_blob(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial double sqlite3_column_double(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_int(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial long sqlite3_column_int64(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_column_text(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_bytes(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_type(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_count(SQLiteStatementHandle statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_column_name(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static partial IntPtr LoadLibrary(string dllToLoad);
 }

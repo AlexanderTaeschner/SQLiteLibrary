@@ -577,10 +577,12 @@ public sealed class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
     {
+        SQLiteStatement sqliteStatement;
+        SQLiteStatementHandle? statementHandle = null;
         byte* utf8SQLStatement = NativeMethods.ToUtf8BytePtr(sqlStatement);
         try
         {
-            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
+            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out byte* tail);
             NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
             if (*tail != 0)
             {
@@ -591,12 +593,16 @@ public sealed class SQLiteStatement : IDisposable
                 }
             }
 
-            return new SQLiteStatement(statementHandle, connectionHandle);
+            sqliteStatement = new SQLiteStatement(statementHandle, connectionHandle);
+            statementHandle = null;
         }
         finally
         {
+            statementHandle?.Dispose();
             NativeMethods.FreeUtf8BytePtr(utf8SQLStatement);
         }
+
+        return sqliteStatement;
     }
 
     /// <summary>
