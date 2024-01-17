@@ -10,7 +10,7 @@ namespace SQLiteLibraryTest;
 public class SQLitePreparedConnectionTests
 {
     private const string FileName = "SQLitePreparedConnectionTests_TestDb.sqlite";
-    private int _openDatabaseCalls = 0;
+    private int _openDatabaseCalls;
 
     private enum SQLitePreparedConnectionTestStatements
     {
@@ -34,7 +34,7 @@ public class SQLitePreparedConnectionTests
 
         Assert.True(File.Exists(FileName));
 
-        IReadOnlyDictionary<SQLitePreparedConnectionTestStatements, string> sqlTextDictionary = new Dictionary<SQLitePreparedConnectionTestStatements, string>()
+        Dictionary<SQLitePreparedConnectionTestStatements, string> sqlTextDictionary = new()
         {
             { SQLitePreparedConnectionTestStatements.InsertValue, "INSERT INTO t VALUES (@value);" },
             { SQLitePreparedConnectionTestStatements.InsertValue43, "INSERT INTO t VALUES (43);" },
@@ -60,7 +60,7 @@ public class SQLitePreparedConnectionTests
 
         Assert.True(File.Exists(FileName));
 
-        IReadOnlyDictionary<SQLitePreparedConnectionTestStatements, byte[]> sqlTextDictionary = new Dictionary<SQLitePreparedConnectionTestStatements, byte[]>()
+        Dictionary<SQLitePreparedConnectionTestStatements, byte[]> sqlTextDictionary = new()
         {
             { SQLitePreparedConnectionTestStatements.InsertValue, "INSERT INTO t VALUES (@value);"u8.ToArray() },
             { SQLitePreparedConnectionTestStatements.InsertValue43, "INSERT INTO t VALUES (43);"u8.ToArray() },
@@ -73,6 +73,8 @@ public class SQLitePreparedConnectionTests
 
     private void TestPreparedConnection(SQLitePreparedConnection<SQLitePreparedConnectionTestStatements> preparedConnection)
     {
+        _openDatabaseCalls = 0;
+
         int i;
         for (i = 1; i <= 42; i++)
         {

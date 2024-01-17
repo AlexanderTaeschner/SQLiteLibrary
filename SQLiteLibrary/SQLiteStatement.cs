@@ -194,6 +194,7 @@ public sealed class SQLiteStatement : IDisposable
             fixed (byte* bytes = value)
             {
                 int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
+                NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
             }
         }
     }

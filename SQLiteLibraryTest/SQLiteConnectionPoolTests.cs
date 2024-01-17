@@ -10,7 +10,7 @@ namespace SQLiteLibraryTest;
 public class SQLiteConnectionPoolTests
 {
     private const string FileName = "SQLiteConnectionPoolTests_TestDb.sqlite";
-    private int _openDatabaseCalls = 0;
+    private int _openDatabaseCalls;
 
     private enum SQLiteConnectionPoolTestStatements
     {
@@ -41,6 +41,7 @@ public class SQLiteConnectionPoolTests
 
         using var connectionPool = new SQLiteConnectionPool<SQLiteConnectionPoolTestStatements>(sqlTextDictionary, CreateSQLiteConnection);
 
+        _openDatabaseCalls = 0;
         for (int i = 1; i <= 42; i++)
         {
             SQLitePooledStatement<SQLiteConnectionPoolTestStatements> pooledInsertStmt = connectionPool.Rent(SQLiteConnectionPoolTestStatements.InsertValue);
