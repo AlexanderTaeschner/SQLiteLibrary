@@ -41,6 +41,7 @@ public class SQLitePreparedConnectionTests
             { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT x FROM t;" },
         };
 
+        _openDatabaseCalls = 0;
         using var preparedConnection = new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(sqlTextDictionary, CreateSQLiteConnection);
         TestPreparedConnection(preparedConnection);
     }
@@ -67,14 +68,13 @@ public class SQLitePreparedConnectionTests
             { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT x FROM t;"u8.ToArray() },
         };
 
+        _openDatabaseCalls = 0;
         using var preparedConnection = new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(sqlTextDictionary, CreateSQLiteConnection);
         TestPreparedConnection(preparedConnection);
     }
 
     private void TestPreparedConnection(SQLitePreparedConnection<SQLitePreparedConnectionTestStatements> preparedConnection)
     {
-        _openDatabaseCalls = 0;
-
         int i;
         for (i = 1; i <= 42; i++)
         {
