@@ -22,6 +22,9 @@ public sealed class SQLitePreparedConnection<TEnum> : IDisposable
     /// <param name="createSQLiteConnection">Function used to create a new SQLiteConnection instance.</param>
     public SQLitePreparedConnection(IReadOnlyDictionary<TEnum, string> sqlTextDictionary, Func<SQLiteConnection> createSQLiteConnection)
     {
+        ArgumentNullException.ThrowIfNull(sqlTextDictionary);
+        ArgumentNullException.ThrowIfNull(createSQLiteConnection);
+
         _connection = createSQLiteConnection();
         var preparedStatements = new Dictionary<TEnum, SQLiteStatement>();
         foreach (KeyValuePair<TEnum, string> kvp in sqlTextDictionary)
@@ -42,6 +45,9 @@ public sealed class SQLitePreparedConnection<TEnum> : IDisposable
     /// <param name="createSQLiteConnection">Function used to create a new SQLiteConnection instance.</param>
     public SQLitePreparedConnection(IReadOnlyDictionary<TEnum, byte[]> sqlTextDictionary, Func<SQLiteConnection> createSQLiteConnection)
     {
+        ArgumentNullException.ThrowIfNull(sqlTextDictionary);
+        ArgumentNullException.ThrowIfNull(createSQLiteConnection);
+
         _connection = createSQLiteConnection();
         var preparedStatements = new Dictionary<TEnum, SQLiteStatement>();
         foreach (KeyValuePair<TEnum, byte[]> kvp in sqlTextDictionary)
@@ -70,7 +76,7 @@ public sealed class SQLitePreparedConnection<TEnum> : IDisposable
     /// Return the prepared statement.
     /// </summary>
     /// <param name="preparedStatement">A prepared statement.</param>
-    public void Return(SQLiteStatement preparedStatement) => preparedStatement.Reset();
+    public void Return(SQLiteStatement preparedStatement) => preparedStatement?.Reset();
 
     /// <inheritdoc/>
     public void Dispose()

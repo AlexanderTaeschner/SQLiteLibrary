@@ -463,8 +463,8 @@ public class SQLiteStatementTests
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, new byte[] { 0xAF, 0x42, 0xFA }));
-        stmt.BindParameter("@value", new byte[] { 0xAF, 0x42, 0xFA });
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, [0xAF, 0x42, 0xFA]));
+        stmt.BindParameter("@value", [0xAF, 0x42, 0xFA]);
 #pragma warning restore DNSQLL001 // Type or member is obsolete
 
         stmt.NewRowStep();
