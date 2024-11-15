@@ -443,7 +443,7 @@ public class SQLiteStatementTests
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
 
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, (byte[])null!));
-        stmt.BindParameter(1, new byte[] { 0xAF, 0x42, 0xFA });
+        stmt.BindParameter(1, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();
 
@@ -484,7 +484,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
 
-        stmt.BindParameter("@value"u8, new byte[] { 0xAF, 0x42, 0xFA });
+        stmt.BindParameter("@value"u8, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();
 

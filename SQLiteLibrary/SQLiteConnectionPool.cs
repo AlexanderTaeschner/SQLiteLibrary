@@ -13,10 +13,10 @@ namespace SQLiteLibrary;
 public sealed class SQLiteConnectionPool<TEnum> : IDisposable
     where TEnum : Enum
 {
-    private readonly IReadOnlyDictionary<TEnum, byte[]> _sqlTextDictionary;
+    private readonly Dictionary<TEnum, byte[]> _sqlTextDictionary;
     private readonly Func<SQLiteConnection> _createSQLiteConnection;
 
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private readonly Dictionary<TEnum, List<SQLitePooledStatement<TEnum>>> _pool = [];
 
