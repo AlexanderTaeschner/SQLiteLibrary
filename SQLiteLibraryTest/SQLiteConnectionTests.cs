@@ -126,7 +126,7 @@ public class SQLiteConnectionTests
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         string value = conn.ExecuteScalarStringQuery("SELECT sqlite_version();"u8);
-        Assert.Equal("3.47.0", value);
+        Assert.Equal("3.47.2", value);
     }
 
     [Fact]
