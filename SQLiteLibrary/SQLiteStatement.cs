@@ -154,14 +154,14 @@ public sealed class SQLiteStatement : IDisposable
     }
 
     /// <summary>
-    /// Binds the parameter with a value.
+    /// Binds the parameter with a text value.
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> value)
+    /// <param name="utf8Text">UTF8 text value of the parameter.</param>
+    public void BindTextParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> utf8Text)
     {
         int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
+        BindTextParameter(idx, utf8Text);
     }
 
     /// <summary>
@@ -186,12 +186,17 @@ public sealed class SQLiteStatement : IDisposable
     /// Binds the parameter with a value.
     /// </summary>
     /// <param name="index">Index of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, ReadOnlySpan<byte> value)
+    /// <param name="utf8Text">UTF8 text value of the parameter.</param>
+    public void BindTextParameter(int index, ReadOnlySpan<byte> utf8Text)
     {
+        if (utf8Text.IsEmpty)
+        {
+            throw new ArgumentNullException(nameof(utf8Text));
+        }
+
         unsafe
         {
-            fixed (byte* bytes = value)
+            fixed (byte* bytes = utf8Text)
             {
                 int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
                 NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
@@ -205,10 +210,10 @@ public sealed class SQLiteStatement : IDisposable
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    public void BindParameter(string parameterName, byte[] value)
+    public void BindBlobParameter(string parameterName, ReadOnlySpan<byte> value)
     {
         int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
-        BindParameter(idx, value);
+        BindBlobParameter(idx, value);
     }
 
     /// <summary>
@@ -216,10 +221,10 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, byte[] value)
+    public void BindBlobParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> value)
     {
         int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
+        BindBlobParameter(idx, value);
     }
 
     /// <summary>
@@ -227,12 +232,21 @@ public sealed class SQLiteStatement : IDisposable
     /// </summary>
     /// <param name="index">Index of the parameter.</param>
     /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, byte[] value)
+    public void BindBlobParameter(int index, ReadOnlySpan<byte> value)
     {
-        ArgumentNullException.ThrowIfNull(value);
+        if (value.IsEmpty)
+        {
+            throw new ArgumentNullException(nameof(value));
+        }
 
-        int result = NativeMethods.sqlite3_bind_blob(_handle, index, value, value.Length, NativeMethods.SQLITE_TRANSIENT);
-        NativeMethods.CheckResult(result, "sqlite3_bind_blob", _connectionHandle);
+        unsafe
+        {
+            fixed (byte* bytes = value)
+            {
+                int result = NativeMethods.sqlite3_bind_blob(_handle, index, bytes, value.Length, NativeMethods.SQLITE_TRANSIENT);
+                NativeMethods.CheckResult(result, "sqlite3_bind_blob", _connectionHandle);
+            }
+        }
     }
 
     /// <summary>

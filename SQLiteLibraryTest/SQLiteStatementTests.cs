@@ -376,7 +376,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
 
-        stmt.BindParameter("@value"u8, "Adams_42"u8);
+        stmt.BindTextParameter("@value"u8, "Adams_42"u8);
 
         stmt.NewRowStep();
 
@@ -426,7 +426,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;"u8);
 
-        stmt.BindParameter("@value"u8, "Adams_42"u8);
+        stmt.BindTextParameter("@value"u8, "Adams_42"u8);
 
         stmt.NewRowStep();
 
@@ -442,8 +442,8 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, (byte[])null!));
-        stmt.BindParameter(1, (byte[])[0xAF, 0x42, 0xFA]);
+        Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter(1, (byte[])null!));
+        stmt.BindBlobParameter(1, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();
 
@@ -463,8 +463,8 @@ public class SQLiteStatementTests
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, [0xAF, 0x42, 0xFA]));
-        stmt.BindParameter("@value", [0xAF, 0x42, 0xFA]);
+        Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter((string)null!, [0xAF, 0x42, 0xFA]));
+        stmt.BindBlobParameter("@value", [0xAF, 0x42, 0xFA]);
 #pragma warning restore DNSQLL001 // Type or member is obsolete
 
         stmt.NewRowStep();
@@ -484,7 +484,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
 
-        stmt.BindParameter("@value"u8, (byte[])[0xAF, 0x42, 0xFA]);
+        stmt.BindBlobParameter("@value"u8, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();
 

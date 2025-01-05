@@ -171,7 +171,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, [In] byte[] value, int valueByteLength, IntPtr destructor);
+    internal static unsafe partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, byte* value, int valueByteLength, IntPtr destructor);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
