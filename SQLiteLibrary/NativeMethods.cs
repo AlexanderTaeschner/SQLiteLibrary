@@ -221,9 +221,10 @@ internal static partial class NativeMethods
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial double sqlite3_column_double(SQLiteStatementHandle statementHandle, int columnIndex);
 
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial int sqlite3_column_int(SQLiteStatementHandle statementHandle, int columnIndex);
+    // Since an SQLite integer can be also an Int64, we use sqlite3_column_int64 and check the size of the value.
+    ////[LibraryImport(SQLiteLibraryFileName)]
+    ////[DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    ////internal static partial int sqlite3_column_int(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -241,6 +242,7 @@ internal static partial class NativeMethods
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_type(SQLiteStatementHandle statementHandle, int columnIndex);
 
+    /* Not used at the moment, but might be useful in the future.
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_count(SQLiteStatementHandle statementHandle);
@@ -248,6 +250,7 @@ internal static partial class NativeMethods
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_column_name(SQLiteStatementHandle statementHandle, int columnIndex);
+    */
 
     [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]

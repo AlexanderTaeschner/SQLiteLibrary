@@ -1,0 +1,48 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<# var types = new string [] {"double", "int", "long", "string", "byte[]"};
+   var sqliteLibTypes = new string [] {"Double", "Integer", "Long", "String", "Blob"};
+#>
+// <copyright file="SQLiteStatementColumnValues.cs" company="Alexander Täschner">
+// Copyright (c) Alexander Täschner. All rights reserved.
+// </copyright>
+
+namespace SQLiteLibrary;
+
+/// <summary>
+/// Prepared SQL statement.
+/// </summary>
+public sealed partial class SQLiteStatement : IDisposable
+{
+<# for (int i=0; i<types.Length; i++) {
+   string typeName = types[i];
+   string sqliteLibTypeName = sqliteLibTypes[i];#>
+    /// <summary>
+    /// Return the value of a single column of the current result row of a query.
+    /// </summary>
+    /// <param name="columnIndex">Index of the column.</param>
+    /// <returns>The value of a single column of the current result row of a query.</returns>
+    public <#= typeName #> GetColumn<#= sqliteLibTypeName #>Value(int columnIndex)
+    {
+        SQLiteDataType type = GetColumnDataType(columnIndex);
+        return DoGetColumn<#= sqliteLibTypeName #>Value(columnIndex, type);
+    }
+
+    /// <summary>
+    /// Return the value of a single column of the current result row of a query.
+    /// </summary>
+    /// <param name="columnIndex">Index of the column.</param>
+    /// <returns>The value of a single column of the current result row of a query.</returns>
+    public <#= typeName #>? GetColumnNullable<#= sqliteLibTypeName #>Value(int columnIndex)
+    {
+        SQLiteDataType type = GetColumnDataType(columnIndex);
+        return type == SQLiteDataType.Null ? (<#= typeName #>?)null : DoGetColumn<#= sqliteLibTypeName #>Value(columnIndex, type);
+    }
+<# if (i<types.Length-1) { #>
+
+<# }} #>
+}

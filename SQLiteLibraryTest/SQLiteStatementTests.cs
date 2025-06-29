@@ -217,6 +217,37 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void BindNullableDoubleValue_NamedParameter_U8_Value_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, 4.2);
+
+        stmt.NewRowStep();
+
+        double? value = stmt.GetColumnNullableDoubleValue(0);
+        Assert.True(value.HasValue);
+        Assert.Equal(4.2, value.Value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableDoubleValue_NamedParameter_U8_Null_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, (double?)null);
+
+        stmt.NewRowStep();
+
+        double? value = stmt.GetColumnNullableDoubleValue(0);
+        Assert.False(value.HasValue);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
     public void BindIntegerValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -268,6 +299,37 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void BindNullableIntegerValue_NamedParameter_U8_Value_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, 42);
+
+        stmt.NewRowStep();
+
+        int? value = stmt.GetColumnNullableIntegerValue(0);
+        Assert.True(value.HasValue);
+        Assert.Equal(42, value.Value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableIntegerValue_NamedParameter_U8_Null_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, (int?)null);
+
+        stmt.NewRowStep();
+
+        int? value = stmt.GetColumnNullableIntegerValue(0);
+        Assert.False(value.HasValue);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
     public void BindLongValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -314,6 +376,37 @@ public class SQLiteStatementTests
 
         long value = stmt.GetColumnLongValue(0);
         Assert.Equal(4242424242L, value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableLongValue_NamedParameter_U8_Value_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, 4242424242L);
+
+        stmt.NewRowStep();
+
+        long? value = stmt.GetColumnNullableLongValue(0);
+        Assert.True(value.HasValue);
+        Assert.Equal(4242424242L, value.Value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableLongValue_NamedParameter_U8_Null_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, (long?)null);
+
+        stmt.NewRowStep();
+
+        long? value = stmt.GetColumnNullableLongValue(0);
+        Assert.False(value.HasValue);
 
         stmt.DoneStep();
     }
@@ -382,6 +475,37 @@ public class SQLiteStatementTests
 
         string value = stmt.GetColumnStringValue(0);
         Assert.Equal("Adams_42", value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableStringValue_NamedParameter_U8_Value_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, "Adams_42");
+
+        stmt.NewRowStep();
+
+        string? value = stmt.GetColumnNullableStringValue(0);
+        Assert.NotNull(value);
+        Assert.Equal("Adams_42", value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindNullableStringValue_NamedParameter_U8_Null_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        stmt.BindNullableParameter("@value"u8, (string?)null);
+
+        stmt.NewRowStep();
+
+        string? value = stmt.GetColumnNullableStringValue(0);
+        Assert.Null(value);
 
         stmt.DoneStep();
     }

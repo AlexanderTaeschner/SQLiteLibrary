@@ -1,0 +1,112 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<# var types = new string [] {"double", "int", "long", "string"};
+   var sqliteLibTypes = new string [] {"double", "int", "int64", "*"};
+#>
+// <copyright file="SQLiteStatementParameterBinding.cs" company="Alexander Täschner">
+// Copyright (c) Alexander Täschner. All rights reserved.
+// </copyright>
+
+namespace SQLiteLibrary;
+
+/// <summary>
+/// Prepared SQL statement.
+/// </summary>
+public sealed partial class SQLiteStatement : IDisposable
+{
+<# for (int i=0; i<types.Length; i++) {
+   string typeName = types[i];
+   string sqliteLibTypeName = sqliteLibTypes[i];#>
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
+    public void BindParameter(string parameterName, <#= typeName #> value)
+    {
+        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        BindParameter(idx, value);
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(ReadOnlySpan<byte> parameterName, <#= typeName #> value)
+    {
+        int idx = GetParameterIndex(parameterName);
+        BindParameter(idx, value);
+    }
+
+<# if (typeName != "string") { #>
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindNullableParameter(ReadOnlySpan<byte> parameterName, <#= typeName #>? value)
+    {
+        if (value.HasValue)
+        {
+            BindParameter(parameterName, value.Value);
+        }
+        else
+        {
+            BindNullToParameter(parameterName);
+        }
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="index">Index of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(int index, <#= typeName #> value)
+    {
+        int result = NativeMethods.sqlite3_bind_<#= sqliteLibTypeName #>(_handle, index, value);
+        NativeMethods.CheckResult(result, "sqlite3_bind_<#= sqliteLibTypeName #>", _connectionHandle);
+    }
+<# if (i<types.Length-1) { #>
+
+<# }}} #>
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="parameterName">Name of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindNullableParameter(ReadOnlySpan<byte> parameterName, string? value)
+    {
+        if (value is not null)
+        {
+            BindParameter(parameterName, value);
+        }
+        else
+        {
+            BindNullToParameter(parameterName);
+        }
+    }
+
+    /// <summary>
+    /// Binds the parameter with a value.
+    /// </summary>
+    /// <param name="index">Index of the parameter.</param>
+    /// <param name="value">Value of the parameter.</param>
+    public void BindParameter(int index, string value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        unsafe
+        {
+            byte* bytes = NativeMethods.ToUtf8BytePtr(value);
+            int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
+            NativeMethods.FreeUtf8BytePtr(bytes);
+            NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
+        }
+    }
+}

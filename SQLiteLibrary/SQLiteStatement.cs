@@ -10,7 +10,7 @@ namespace SQLiteLibrary;
 /// <summary>
 /// Prepared SQL statement.
 /// </summary>
-public sealed class SQLiteStatement : IDisposable
+public sealed partial class SQLiteStatement : IDisposable
 {
     private const string ISO8601TextFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFFK";
 
@@ -29,131 +29,6 @@ public sealed class SQLiteStatement : IDisposable
     public void Dispose() => _handle.Dispose();
 
     /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    public void BindParameter(string parameterName, double value)
-    {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, double value)
-    {
-        int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="index">Index of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, double value)
-    {
-        int result = NativeMethods.sqlite3_bind_double(_handle, index, value);
-        NativeMethods.CheckResult(result, "sqlite3_bind_double", _connectionHandle);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    public void BindParameter(string parameterName, int value)
-    {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, int value)
-    {
-        int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="index">Index of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, int value)
-    {
-        int result = NativeMethods.sqlite3_bind_int(_handle, index, value);
-        NativeMethods.CheckResult(result, "sqlite3_bind_int", _connectionHandle);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    public void BindParameter(string parameterName, long value)
-    {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, long value)
-    {
-        int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="index">Index of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, long value)
-    {
-        int result = NativeMethods.sqlite3_bind_int64(_handle, index, value);
-        NativeMethods.CheckResult(result, "sqlite3_bind_int64", _connectionHandle);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    public void BindParameter(string parameterName, string value)
-    {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="parameterName">Name of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(ReadOnlySpan<byte> parameterName, string value)
-    {
-        int idx = GetParameterIndex(parameterName);
-        BindParameter(idx, value);
-    }
-
-    /// <summary>
     /// Binds the parameter with a text value.
     /// </summary>
     /// <param name="parameterName">Name of the parameter.</param>
@@ -162,24 +37,6 @@ public sealed class SQLiteStatement : IDisposable
     {
         int idx = GetParameterIndex(parameterName);
         BindTextParameter(idx, utf8Text);
-    }
-
-    /// <summary>
-    /// Binds the parameter with a value.
-    /// </summary>
-    /// <param name="index">Index of the parameter.</param>
-    /// <param name="value">Value of the parameter.</param>
-    public void BindParameter(int index, string value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        unsafe
-        {
-            byte* bytes = NativeMethods.ToUtf8BytePtr(value);
-            int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
-            NativeMethods.FreeUtf8BytePtr(bytes);
-            NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
-        }
     }
 
     /// <summary>
@@ -446,116 +303,6 @@ public sealed class SQLiteStatement : IDisposable
     /// Return the value of a single column of the current result row of a query.
     /// </summary>
     /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public double GetColumnDoubleValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return DoGetColumnDoubleValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public double? GetColumnNullableDoubleValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (double?)null : DoGetColumnDoubleValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public int GetColumnIntegerValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return DoGetColumnIntegerValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public int? GetColumnNullableIntegerValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (int?)null : DoGetColumnIntegerValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public long GetColumnLongValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return DoGetColumnLongValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public long? GetColumnNullableLongValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (long?)null : DoGetColumnLongValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public string GetColumnStringValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return DoGetColumnTextValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public string? GetColumnNullableStringValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (string?)null : DoGetColumnTextValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public byte[] GetColumnBlobValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return DoGetColumnBlobValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
-    /// <returns>The value of a single column of the current result row of a query.</returns>
-    public byte[]? GetColumnNullableBlobValue(int columnIndex)
-    {
-        SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? null : DoGetColumnBlobValue(columnIndex, type);
-    }
-
-    /// <summary>
-    /// Return the value of a single column of the current result row of a query.
-    /// </summary>
-    /// <param name="columnIndex">Index of the column.</param>
     /// <param name="format">Database representation format of the value.</param>
     /// <returns>The value of a single column of the current result row of a query.</returns>
     public DateTime GetColumnDateTimeValue(int columnIndex, SQLiteDateTimeFormat format)
@@ -742,7 +489,7 @@ public sealed class SQLiteStatement : IDisposable
             : NativeMethods.sqlite3_column_int64(_handle, columnIndex);
     }
 
-    private string DoGetColumnTextValue(int columnIndex, SQLiteDataType type)
+    private string DoGetColumnStringValue(int columnIndex, SQLiteDataType type)
     {
         if (type != SQLiteDataType.Text)
         {
