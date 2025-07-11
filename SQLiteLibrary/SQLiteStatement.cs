@@ -378,7 +378,7 @@ public sealed partial class SQLiteStatement : IDisposable
     {
         fixed (byte* utf8SQLStatement = sqlStatement)
         {
-            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
+            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, sqlStatement.Length, out SQLiteStatementHandle? statementHandle, out byte* tail);
             NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
             if (*tail != 0)
             {
