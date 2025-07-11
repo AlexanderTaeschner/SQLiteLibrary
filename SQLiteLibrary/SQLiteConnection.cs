@@ -74,7 +74,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <summary>
     /// Prepare a SQLite statement.
     /// </summary>
-    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <param name="sqlStatement">The null-terminated SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     public SQLiteStatement PrepareStatement(ReadOnlySpan<byte> sqlStatement)
@@ -96,7 +96,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <summary>
     /// Prepare and execute a non query SQL statement.
     /// </summary>
-    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <param name="sqlStatement">The null-terminated SQL statement.</param>
     public void ExecuteNonQuery(ReadOnlySpan<byte> sqlStatement)
     {
         using SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
@@ -127,7 +127,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <summary>
     /// Prepare and execute a scalar query SQL statement and return the contents of the first column.
     /// </summary>
-    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <param name="sqlStatement">The null-terminated SQL statement.</param>
     /// <returns>The contents of the first result column.</returns>
     public string ExecuteScalarStringQuery(ReadOnlySpan<byte> sqlStatement)
     {
@@ -161,7 +161,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <summary>
     /// Prepare a SQLite statement and execute step expecting new row.
     /// </summary>
-    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <param name="sqlStatement">The null-terminated SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     public SQLiteStatement PrepareStatementAndNewRowStep(ReadOnlySpan<byte> sqlStatement)

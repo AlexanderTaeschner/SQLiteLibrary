@@ -371,14 +371,14 @@ public sealed partial class SQLiteStatement : IDisposable
     /// Creates a SQLite statement.
     /// </summary>
     /// <param name="connectionHandle">SQLite connection handle.</param>
-    /// <param name="sqlStatement">The SQL statement.</param>
+    /// <param name="sqlStatement">The null terminated SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, ReadOnlySpan<byte> sqlStatement)
     {
         fixed (byte* utf8SQLStatement = sqlStatement)
         {
-            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, sqlStatement.Length, out SQLiteStatementHandle? statementHandle, out byte* tail);
+            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
             NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
             if (*tail != 0)
             {

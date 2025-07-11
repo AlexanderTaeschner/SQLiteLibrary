@@ -125,6 +125,21 @@ internal static partial class NativeMethods
         return mem;
     }
 
+    internal static byte[] ToUtf8Bytes(string s)
+    {
+        if (s is null)
+        {
+            return [0];
+        }
+
+        int exactByteCount = checked(Encoding.UTF8.GetByteCount(s) + 1); // + 1 for null terminator
+        byte[] buffer = new byte[exactByteCount];
+
+        int byteCount = Encoding.UTF8.GetBytes(s, buffer);
+        buffer[byteCount] = 0; // null-terminate
+        return buffer;
+    }
+
     internal static unsafe void FreeUtf8BytePtr(byte* ptr)
         => Marshal.FreeCoTaskMem((IntPtr)ptr);
 

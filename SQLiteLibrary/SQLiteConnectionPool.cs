@@ -31,7 +31,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
         IReadOnlyDictionary<TEnum, string> sqlTextDictionary,
         Func<SQLiteConnection> createSQLiteConnection)
     {
-        _sqlTextDictionary = new Dictionary<TEnum, byte[]>(sqlTextDictionary.Select(kvp => new KeyValuePair<TEnum, byte[]>(kvp.Key, Encoding.UTF8.GetBytes(kvp.Value))));
+        _sqlTextDictionary = new Dictionary<TEnum, byte[]>(sqlTextDictionary.Select(kvp => new KeyValuePair<TEnum, byte[]>(kvp.Key, NativeMethods.ToUtf8Bytes(kvp.Value))));
         _createSQLiteConnection = createSQLiteConnection;
     }
 
