@@ -15,9 +15,12 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.8.1.1</Version>
+		<Version>1.9.0.0</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageReleaseNotes>Fix documentation for preparation of statements.</PackageReleaseNotes>
+		<PackageReleaseNotes>
+			Enforced the use of null-terminated UTF8 string literals passed to the native library, since this could otherwise lead to unexpected failure.
+			Updated the native library to version 3.50.3.
+		</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

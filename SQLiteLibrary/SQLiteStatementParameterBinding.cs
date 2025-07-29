@@ -17,7 +17,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, double value)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -28,7 +29,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(ReadOnlySpan<byte> parameterName, double value)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -68,7 +70,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, int value)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -79,7 +82,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(ReadOnlySpan<byte> parameterName, int value)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -119,7 +123,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, long value)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -130,7 +135,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(ReadOnlySpan<byte> parameterName, long value)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -170,7 +176,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, string value)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -181,7 +188,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindParameter(ReadOnlySpan<byte> parameterName, string value)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value);
     }
 
@@ -210,13 +218,6 @@ public sealed partial class SQLiteStatement : IDisposable
     public void BindParameter(int index, string value)
     {
         ArgumentNullException.ThrowIfNull(value);
-
-        unsafe
-        {
-            byte* bytes = NativeMethods.ToUtf8BytePtr(value);
-            int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
-            NativeMethods.FreeUtf8BytePtr(bytes);
-            NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
-        }
+        NativeMethods.BindText(_handle, _connectionHandle, index, value);
     }
 }

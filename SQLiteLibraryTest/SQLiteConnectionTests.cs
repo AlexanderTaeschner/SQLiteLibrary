@@ -38,7 +38,7 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;\0"u8);
         Assert.NotNull(stmt);
     }
 
@@ -46,13 +46,26 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Throws_On_SQL_Error_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT * FROM t;"u8));
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT * FROM t;\0"u8));
         Assert.Equal("SELECT * FROM t;", exception.SqlStatement);
         Assert.Equal(1, exception.ResultCode);
         Assert.Equal("SQL logic error", exception.ResultCodeName);
         Assert.Equal("sqlite3_prepare_v2", exception.NativeMethod);
         Assert.Equal("no such table: t", exception.NativeErrorMessage);
         Assert.Equal("SQLiteLibrary.SQLiteException: Native method sqlite3_prepare_v2 returned error code SQL logic error(1): 'no such table: t'!", exception.Message);
+    }
+
+    [Fact]
+    public void Prepare_Statement_Throws_On_Not_Null_Terminated_String()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1;"u8));
+        Assert.Null(exception.SqlStatement);
+        Assert.Equal(0, exception.ResultCode);
+        Assert.Equal(string.Empty, exception.ResultCodeName);
+        Assert.Equal(string.Empty, exception.NativeMethod);
+        Assert.Equal(string.Empty, exception.NativeErrorMessage);
+        Assert.Equal("The UTF8 text in parameter 'sqlStatement' must be null terminated!", exception.Message);
     }
 
     [Fact]
@@ -69,7 +82,7 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Throws_For_Multiple_Statements_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;"u8));
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT 1; SELECT 2;\0"u8));
         Assert.Equal("SQL statement contained more than a single SQL command. Additional text: ' SELECT 2;'", exception.Message);
     }
 
@@ -93,11 +106,11 @@ public class SQLiteConnectionTests
     public void ExecuteNonQuery_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
-        conn.ExecuteNonQuery("INSERT INTO t VALUES (42);"u8);
+        conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+        conn.ExecuteNonQuery("INSERT INTO t VALUES (42);\0"u8);
         long rowid = conn.GetLastInsertRowid();
         Assert.Equal(1, rowid);
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;\0"u8);
         int value = stmt.GetColumnIntegerValue(0);
         Assert.Equal(42, value);
         stmt.DoneStep();
@@ -117,7 +130,7 @@ public class SQLiteConnectionTests
     public void ExecuteScalarStringQuery_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        string value = conn.ExecuteScalarStringQuery("SELECT 'Adams_42';"u8);
+        string value = conn.ExecuteScalarStringQuery("SELECT 'Adams_42';\0"u8);
         Assert.Equal("Adams_42", value);
     }
 
@@ -125,8 +138,8 @@ public class SQLiteConnectionTests
     public void Expected_Version_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        string value = conn.ExecuteScalarStringQuery("SELECT sqlite_version();"u8);
-        Assert.Equal("3.50.2", value);
+        string value = conn.ExecuteScalarStringQuery("SELECT sqlite_version();\0"u8);
+        Assert.Equal("3.50.3", value);
     }
 
     [Fact]
@@ -140,8 +153,8 @@ public class SQLiteConnectionTests
 
         using (var conn = SQLiteConnection.CreateNewOrOpenExistingDb(fileName))
         {
-            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
-            conn.ExecuteNonQuery("INSERT INTO t VALUES (42);"u8);
+            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+            conn.ExecuteNonQuery("INSERT INTO t VALUES (42);\0"u8);
             long rowid = conn.GetLastInsertRowid();
             Assert.Equal(1, rowid);
         }
@@ -150,7 +163,7 @@ public class SQLiteConnectionTests
 
         using (var conn = SQLiteConnection.OpenExistingDbReadOnly(fileName))
         {
-            using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;"u8);
+            using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT x FROM t;\0"u8);
             int value = stmt.GetColumnIntegerValue(0);
             Assert.Equal(42, value);
             stmt.DoneStep();

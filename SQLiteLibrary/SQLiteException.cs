@@ -2,6 +2,9 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
 namespace SQLiteLibrary;
 
 /// <summary>
@@ -58,18 +61,37 @@ public class SQLiteException : Exception
     /// </summary>
     public string? SqlStatement { get; }
 
-    internal static SQLiteException Create(int resultCode, string nativeMethod, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
+    internal static void ThrowIfNotNullTerminated(ReadOnlySpan<byte> utf8Text, [CallerArgumentExpression(nameof(utf8Text))] string? paramName = null)
     {
-        IntPtr utf8Text = NativeMethods.sqlite3_errstr(resultCode);
-        string? resultCodeName = NativeMethods.FromUtf8(utf8Text);
-        string? nativeErrorMessage = string.Empty;
-        if (connectionHandle != null)
+        if (utf8Text.IsEmpty)
         {
-            utf8Text = NativeMethods.sqlite3_errmsg(connectionHandle);
-            nativeErrorMessage = NativeMethods.FromUtf8(utf8Text);
+            ThrowArgumentNullException(paramName);
         }
 
-        string? message = $"SQLiteLibrary.SQLiteException: Native method {nativeMethod} returned error code {resultCodeName}({resultCode}): '{nativeErrorMessage}'!";
+        if (utf8Text[^1] != 0)
+        {
+            ThrowNotNullTerminated(paramName);
+        }
+    }
+
+    internal static SQLiteException Create(int resultCode, string nativeMethod, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
+    {
+        string resultCodeName = NativeMethods.GetErrorString(resultCode);
+        string nativeErrorMessage = string.Empty;
+        if (connectionHandle != null)
+        {
+            nativeErrorMessage = NativeMethods.GetErrorMessage(connectionHandle);
+        }
+
+        string message = $"SQLiteLibrary.SQLiteException: Native method {nativeMethod} returned error code {resultCodeName}({resultCode}): '{nativeErrorMessage}'!";
         return new SQLiteException(message, resultCode, nativeMethod, resultCodeName, nativeErrorMessage, sqlStatement);
     }
+
+    [DoesNotReturn]
+    private static void ThrowNotNullTerminated(string? paramName)
+        => throw new SQLiteException($"The UTF8 text in parameter '{paramName}' must be null terminated!");
+
+    [DoesNotReturn]
+    private static void ThrowArgumentNullException(string? paramName)
+        => throw new ArgumentNullException(paramName);
 }

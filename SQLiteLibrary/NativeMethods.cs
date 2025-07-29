@@ -2,6 +2,7 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -96,7 +97,7 @@ internal static partial class NativeMethods
     {
         if (result != SQLITE_OK)
         {
-            throw SQLiteException.Create(result, method, connectionHandle);
+            ThrowSQLiteException(result, method, connectionHandle);
         }
     }
 
@@ -105,26 +106,176 @@ internal static partial class NativeMethods
         if (result != SQLITE_OK)
         {
             string sqlStatement = FromUtf8(utf8SQLStatement);
-            throw SQLiteException.Create(result, method, connectionHandle, sqlStatement);
+            ThrowSQLiteException(result, method, connectionHandle, sqlStatement);
         }
     }
 
-    internal static unsafe byte* ToUtf8BytePtr(string s)
+    /// <summary>
+    /// Opens a new SQLite database connection with the specified file name and flags.
+    /// </summary>
+    /// <returns>A handle to the newly opened SQLite database connection. The caller is responsible for managing the lifetime of
+    /// the connection and ensuring it is properly disposed of when no longer needed.</returns>
+    internal static SQLiteConnectionHandle Sqlite3OpenV2(string fileName, int flags)
     {
-        if (s is null)
+        int result;
+        SQLiteConnectionHandle connectionHandle;
+        unsafe
         {
-            return null;
+            byte* utf8Filename = ToUtf8BytePtr(fileName);
+            result = sqlite3_open_v2(utf8Filename, out connectionHandle, flags, IntPtr.Zero);
+            FreeUtf8BytePtr(utf8Filename);
         }
 
-        int exactByteCount = checked(Encoding.UTF8.GetByteCount(s) + 1); // + 1 for null terminator
-        byte* mem = (byte*)Marshal.AllocCoTaskMem(exactByteCount);
-        Span<byte> buffer = new(mem, exactByteCount);
+        CheckResult(result, "sqlite3_open", null);
+        result = sqlite3_extended_result_codes(connectionHandle, 1);
+        CheckResult(result, "sqlite3_extended_result_codes", connectionHandle);
 
-        int byteCount = Encoding.UTF8.GetBytes(s, buffer);
-        buffer[byteCount] = 0; // null-terminate
-        return mem;
+        return connectionHandle;
     }
 
+    internal static SQLiteStatementHandle PrepareStatementHandle(SQLiteConnectionHandle connectionHandle, string sqlStatement)
+    {
+        SQLiteStatementHandle? statementHandle = null;
+        unsafe
+        {
+            byte* utf8SQLStatement = ToUtf8BytePtr(sqlStatement);
+            try
+            {
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out byte* tail);
+                CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
+                if (*tail != 0)
+                {
+                    string remainder = FromUtf8(tail);
+                    if (!string.IsNullOrEmpty(remainder))
+                    {
+                        throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                    }
+                }
+            }
+            catch (SQLiteException)
+            {
+                // Ensure that we clean up the statement handle if an exception occurs.
+                statementHandle?.Dispose();
+                throw;
+            }
+            finally
+            {
+                FreeUtf8BytePtr(utf8SQLStatement);
+            }
+        }
+
+        return statementHandle;
+    }
+
+    internal static SQLiteStatementHandle PrepareStatementHandle(SQLiteConnectionHandle connectionHandle, ReadOnlySpan<byte> sqlStatement)
+    {
+        // The caller must ensure that the sqlStatement is not null and null-terminated!
+        unsafe
+        {
+            fixed (byte* utf8SQLStatement = sqlStatement)
+            {
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle statementHandle, out byte* tail);
+                CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
+                if (*tail != 0)
+                {
+                    string remainder = FromUtf8(tail);
+                    if (!string.IsNullOrEmpty(remainder))
+                    {
+                        throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                    }
+                }
+
+                return statementHandle;
+            }
+        }
+    }
+
+    internal static void BindText(SQLiteStatementHandle handle, SQLiteConnectionHandle connectionHandle, int index, ReadOnlySpan<byte> utf8Text)
+    {
+        // The callers have to ensure that utf8Text is not empty and null terminated!
+        unsafe
+        {
+            fixed (byte* bytes = utf8Text)
+            {
+                int result = sqlite3_bind_text(handle, index, bytes, -1, SQLITE_TRANSIENT);
+                CheckResult(result, "sqlite3_bind_text", connectionHandle);
+            }
+        }
+    }
+
+    internal static void BindText(SQLiteStatementHandle handle, SQLiteConnectionHandle connectionHandle, int index, string value)
+    {
+        unsafe
+        {
+            byte* bytes = ToUtf8BytePtr(value);
+            int result = sqlite3_bind_text(handle, index, bytes, -1, SQLITE_TRANSIENT);
+            FreeUtf8BytePtr(bytes);
+            CheckResult(result, "sqlite3_bind_text", connectionHandle);
+        }
+    }
+
+    internal static void BindBlob(SQLiteStatementHandle handle, SQLiteConnectionHandle connectionHandle, int index, ReadOnlySpan<byte> value)
+    {
+        unsafe
+        {
+            fixed (byte* bytes = value)
+            {
+                int result = sqlite3_bind_blob(handle, index, bytes, value.Length, SQLITE_TRANSIENT);
+                CheckResult(result, "sqlite3_bind_blob", connectionHandle);
+            }
+        }
+    }
+
+    internal static int GetParameterIndex(SQLiteStatementHandle handle, string parameterName)
+    {
+        unsafe
+        {
+            byte* ut8Text = ToUtf8BytePtr(parameterName);
+            int idx = sqlite3_bind_parameter_index(handle, ut8Text);
+            FreeUtf8BytePtr(ut8Text);
+            return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{parameterName}' was not found in the prepared statement!") : idx;
+        }
+    }
+
+    internal static int GetParameterIndex(SQLiteStatementHandle handle, ReadOnlySpan<byte> parameterName)
+    {
+        // The caller must ensure that the parameterName is not empty and null-terminated!
+        unsafe
+        {
+            fixed (byte* ut8Text = parameterName)
+            {
+                int idx = sqlite3_bind_parameter_index(handle, ut8Text);
+                return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{NativeMethods.FromUtf8(ut8Text)}' was not found in the prepared statement!") : idx;
+            }
+        }
+    }
+
+    internal static string GetColumnText(SQLiteStatementHandle handle, int columnIndex)
+    {
+        IntPtr utf8Text = NativeMethods.sqlite3_column_text(handle, columnIndex);
+        return NativeMethods.FromUtf8(utf8Text);
+    }
+
+    internal static string GetErrorMessage(SQLiteConnectionHandle connectionHandle)
+    {
+        IntPtr utf8Text = sqlite3_errmsg(connectionHandle);
+        return FromUtf8(utf8Text);
+    }
+
+    internal static string GetErrorString(int resultCode)
+    {
+        IntPtr utf8Text = sqlite3_errstr(resultCode);
+        return FromUtf8(utf8Text);
+    }
+
+    /// <summary>
+    /// Converts the specified string to a UTF-8 encoded byte array with a null terminator.
+    /// </summary>
+    /// <remarks>The returned byte array includes a null terminator at the end, making it suitable for
+    /// interoperation with APIs that expect null-terminated UTF-8 strings.</remarks>
+    /// <param name="s">The string to convert. If <paramref name="s"/> is <see langword="null"/>, a byte array containing only the null
+    /// terminator is returned.</param>
+    /// <returns>A byte array containing the UTF-8 encoded representation of the input string, followed by a null terminator.</returns>
     internal static byte[] ToUtf8Bytes(string s)
     {
         if (s is null)
@@ -140,18 +291,6 @@ internal static partial class NativeMethods
         return buffer;
     }
 
-    internal static unsafe void FreeUtf8BytePtr(byte* ptr)
-        => Marshal.FreeCoTaskMem((IntPtr)ptr);
-
-    internal static unsafe string FromUtf8(byte* ptr) => FromUtf8((IntPtr)ptr);
-
-    internal static string FromUtf8(IntPtr ptr)
-        => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static unsafe partial int sqlite3_open_v2(byte* utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
-
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_close(IntPtr connectionHandle);
@@ -162,31 +301,11 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial int sqlite3_extended_result_codes(SQLiteConnectionHandle connectionHandle, int onoff);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial long sqlite3_last_insert_rowid(SQLiteConnectionHandle connectionHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial IntPtr sqlite3_errmsg(SQLiteConnectionHandle connectionHandle);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial IntPtr sqlite3_errstr(int resultCode);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static unsafe partial int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out byte* tail);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_finalize(IntPtr statementHandle);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static unsafe partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, byte* value, int valueByteLength, IntPtr destructor);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -203,14 +322,6 @@ internal static partial class NativeMethods
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_bind_null(SQLiteStatementHandle statementHandle, int index);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static unsafe partial int sqlite3_bind_text(SQLiteStatementHandle statementHandle, int index, byte* utf8Text, int utf8TextByteLength, IntPtr destructor);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static unsafe partial int sqlite3_bind_parameter_index(SQLiteStatementHandle statementHandle, byte* utf8ParameterName);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -247,10 +358,6 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial IntPtr sqlite3_column_text(SQLiteStatementHandle statementHandle, int columnIndex);
-
-    [LibraryImport(SQLiteLibraryFileName)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_bytes(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport(SQLiteLibraryFileName)]
@@ -266,6 +373,79 @@ internal static partial class NativeMethods
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial IntPtr sqlite3_column_name(SQLiteStatementHandle statementHandle, int columnIndex);
     */
+
+    /// <summary>
+    /// Converts the specified string to a null-terminated UTF-8 encoded byte pointer.
+    /// </summary>
+    /// <remarks>The caller is responsible for freeing the allocated memory using <see
+    /// cref="Marshal.FreeCoTaskMem(IntPtr)"/>  to avoid memory leaks. The returned pointer is allocated using COM task
+    /// memory.</remarks>
+    /// <param name="s">The string to convert. If <see langword="null"/>, the method returns <see langword="null"/>.</param>
+    /// <returns>A pointer to a null-terminated UTF-8 encoded byte array representing the input string,  or <see
+    /// langword="null"/> if the input string is <see langword="null"/>.</returns>
+    private static unsafe byte* ToUtf8BytePtr(string s)
+    {
+        if (s is null)
+        {
+            return null;
+        }
+
+        int exactByteCount = checked(Encoding.UTF8.GetByteCount(s) + 1); // + 1 for null terminator
+        byte* mem = (byte*)Marshal.AllocCoTaskMem(exactByteCount);
+        Span<byte> buffer = new(mem, exactByteCount);
+
+        int byteCount = Encoding.UTF8.GetBytes(s, buffer);
+        buffer[byteCount] = 0; // null-terminate
+        return mem;
+    }
+
+    private static unsafe void FreeUtf8BytePtr(byte* ptr)
+        => Marshal.FreeCoTaskMem((IntPtr)ptr);
+
+    private static unsafe string FromUtf8(byte* ptr) => FromUtf8((IntPtr)ptr);
+
+    private static string FromUtf8(IntPtr ptr)
+        => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
+
+    [DoesNotReturn]
+    private static unsafe void ThrowSQLiteException(int result, string method, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
+        => throw SQLiteException.Create(result, method, connectionHandle, sqlStatement);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static unsafe partial int sqlite3_open_v2(byte* utf8Filename, out SQLiteConnectionHandle connectionHandle, int flags, IntPtr vfsModule);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static partial int sqlite3_extended_result_codes(SQLiteConnectionHandle connectionHandle, int onoff);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static partial IntPtr sqlite3_errmsg(SQLiteConnectionHandle connectionHandle);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static partial IntPtr sqlite3_errstr(int resultCode);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static unsafe partial int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out byte* tail);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static unsafe partial int sqlite3_bind_blob(SQLiteStatementHandle statementHandle, int index, byte* value, int valueByteLength, IntPtr destructor);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static unsafe partial int sqlite3_bind_text(SQLiteStatementHandle statementHandle, int index, byte* utf8Text, int utf8TextByteLength, IntPtr destructor);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static unsafe partial int sqlite3_bind_parameter_index(SQLiteStatementHandle statementHandle, byte* utf8ParameterName);
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static partial IntPtr sqlite3_column_text(SQLiteStatementHandle statementHandle, int columnIndex);
 
     [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]

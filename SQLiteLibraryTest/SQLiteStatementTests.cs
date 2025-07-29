@@ -27,7 +27,7 @@ public class SQLiteStatementTests
     public void Step_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;\0"u8);
         SQLiteStepResult res = stmt.Step();
         Assert.Equal(SQLiteStepResult.NewRow, res);
 
@@ -51,7 +51,7 @@ public class SQLiteStatementTests
     public void Step_After_PrepareStatementAndNewRowStep_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 1;\0"u8);
 
         SQLiteStepResult res = stmt.Step();
         Assert.Equal(SQLiteStepResult.Done, res);
@@ -80,7 +80,7 @@ public class SQLiteStatementTests
     public void GetColumnDataType_On_Invalid_Column_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 42;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 42;\0"u8);
 
         SQLiteDataType type = stmt.GetColumnDataType(1);
         Assert.Equal(SQLiteDataType.Null, type);
@@ -92,7 +92,7 @@ public class SQLiteStatementTests
     public void GetColumnDoubleValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4.2;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4.2;\0"u8);
 
         double value = stmt.GetColumnDoubleValue(0);
         Assert.Equal(4.2, value);
@@ -106,7 +106,7 @@ public class SQLiteStatementTests
     public void GetColumnIntegerValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 42;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 42;\0"u8);
 
         int value = stmt.GetColumnIntegerValue(0);
         Assert.Equal(42, value);
@@ -120,7 +120,7 @@ public class SQLiteStatementTests
     public void GetColumnLongValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4242424242;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4242424242;\0"u8);
 
         long value = stmt.GetColumnLongValue(0);
         Assert.Equal(4242424242L, value);
@@ -134,7 +134,7 @@ public class SQLiteStatementTests
     public void GetColumnStringValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 'Adams_42';"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 'Adams_42';\0"u8);
 
         string value = stmt.GetColumnStringValue(0);
         Assert.Equal("Adams_42", value);
@@ -148,7 +148,7 @@ public class SQLiteStatementTests
     public void GetColumnBlobValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT X'AF42FA';"u8);
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT X'AF42FA';\0"u8);
 
         byte[] value = stmt.GetColumnBlobValue(0);
         Assert.Equal(3, value.Length);
@@ -170,7 +170,7 @@ public class SQLiteStatementTests
     public void BindDoubleValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindParameter(1, 4.2);
 
@@ -186,7 +186,7 @@ public class SQLiteStatementTests
     public void BindDoubleValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 4.2));
@@ -205,8 +205,8 @@ public class SQLiteStatementTests
     public void BindDoubleValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindParameter("@value"u8, 4.2);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindParameter("@value\0"u8, 4.2);
 
         stmt.NewRowStep();
 
@@ -220,8 +220,8 @@ public class SQLiteStatementTests
     public void BindNullableDoubleValue_NamedParameter_U8_Value_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, 4.2);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, 4.2);
 
         stmt.NewRowStep();
 
@@ -236,8 +236,8 @@ public class SQLiteStatementTests
     public void BindNullableDoubleValue_NamedParameter_U8_Null_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, (double?)null);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, (double?)null);
 
         stmt.NewRowStep();
 
@@ -251,7 +251,7 @@ public class SQLiteStatementTests
     public void BindIntegerValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindParameter(1, 42);
 
@@ -267,11 +267,11 @@ public class SQLiteStatementTests
     public void BindIntegerValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 42));
-        stmt.BindParameter("@value", 42);
+        stmt.BindParameter("@value\0", 42);
 #pragma warning restore DNSQLL001 // Type or member is obsolete
 
         stmt.NewRowStep();
@@ -286,9 +286,9 @@ public class SQLiteStatementTests
     public void BindIntegerValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindParameter("@value"u8, 42);
+        stmt.BindParameter("@value\0"u8, 42);
 
         stmt.NewRowStep();
 
@@ -302,8 +302,8 @@ public class SQLiteStatementTests
     public void BindNullableIntegerValue_NamedParameter_U8_Value_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, 42);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, 42);
 
         stmt.NewRowStep();
 
@@ -318,8 +318,8 @@ public class SQLiteStatementTests
     public void BindNullableIntegerValue_NamedParameter_U8_Null_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, (int?)null);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, (int?)null);
 
         stmt.NewRowStep();
 
@@ -333,7 +333,7 @@ public class SQLiteStatementTests
     public void BindLongValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindParameter(1, 4242424242L);
 
@@ -349,7 +349,7 @@ public class SQLiteStatementTests
     public void BindLongValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, 4242424242L));
@@ -368,9 +368,9 @@ public class SQLiteStatementTests
     public void BindLongValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindParameter("@value"u8, 4242424242L);
+        stmt.BindParameter("@value\0"u8, 4242424242L);
 
         stmt.NewRowStep();
 
@@ -384,8 +384,8 @@ public class SQLiteStatementTests
     public void BindNullableLongValue_NamedParameter_U8_Value_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, 4242424242L);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, 4242424242L);
 
         stmt.NewRowStep();
 
@@ -400,8 +400,8 @@ public class SQLiteStatementTests
     public void BindNullableLongValue_NamedParameter_U8_Null_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, (long?)null);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, (long?)null);
 
         stmt.NewRowStep();
 
@@ -415,7 +415,7 @@ public class SQLiteStatementTests
     public void BindStringValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, (string)null!));
         stmt.BindParameter(1, "Adams_42");
@@ -432,7 +432,7 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindParameter((string)null!, "Adams_42"));
@@ -451,9 +451,9 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindParameter("@value"u8, "Adams_42");
+        stmt.BindParameter("@value\0"u8, "Adams_42");
 
         stmt.NewRowStep();
 
@@ -467,9 +467,9 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_U8U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindTextParameter("@value"u8, "Adams_42"u8);
+        stmt.BindTextParameter("@value\0"u8, "Adams_42\0"u8);
 
         stmt.NewRowStep();
 
@@ -483,8 +483,8 @@ public class SQLiteStatementTests
     public void BindNullableStringValue_NamedParameter_U8_Value_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, "Adams_42");
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, "Adams_42");
 
         stmt.NewRowStep();
 
@@ -499,8 +499,8 @@ public class SQLiteStatementTests
     public void BindNullableStringValue_NamedParameter_U8_Null_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
-        stmt.BindNullableParameter("@value"u8, (string?)null);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
+        stmt.BindNullableParameter("@value\0"u8, (string?)null);
 
         stmt.NewRowStep();
 
@@ -514,7 +514,7 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_Comparison_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         stmt.BindParameter("@value", "Adams_42");
@@ -532,9 +532,9 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_Comparison_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;\0"u8);
 
-        stmt.BindParameter("@value"u8, "Adams_42");
+        stmt.BindParameter("@value\0"u8, "Adams_42");
 
         stmt.NewRowStep();
 
@@ -548,9 +548,9 @@ public class SQLiteStatementTests
     public void BindStringValue_NamedParameter_Comparison_U8U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 'Adams_42' = @value;\0"u8);
 
-        stmt.BindTextParameter("@value"u8, "Adams_42"u8);
+        stmt.BindTextParameter("@value\0"u8, "Adams_42\0"u8);
 
         stmt.NewRowStep();
 
@@ -564,7 +564,7 @@ public class SQLiteStatementTests
     public void BindBlobValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter(1, (byte[])null!));
         stmt.BindBlobParameter(1, (byte[])[0xAF, 0x42, 0xFA]);
@@ -584,7 +584,7 @@ public class SQLiteStatementTests
     public void BindBlobValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter((string)null!, [0xAF, 0x42, 0xFA]));
@@ -606,9 +606,9 @@ public class SQLiteStatementTests
     public void BindBlobValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindBlobParameter("@value"u8, (byte[])[0xAF, 0x42, 0xFA]);
+        stmt.BindBlobParameter("@value\0"u8, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();
 
@@ -625,7 +625,7 @@ public class SQLiteStatementTests
     public void BindZeroedBlobValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindZeroedBlobParameter(1, 3);
 
@@ -644,7 +644,7 @@ public class SQLiteStatementTests
     public void BindZeroedBlob64Value_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindZeroedBlobParameter(1, 3L);
 
@@ -663,7 +663,7 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_ISO8601Text_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => stmt.BindParameter(1, new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), (SQLiteDateTimeFormat)int.MaxValue));
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -684,7 +684,7 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_ISO8601Text_LocalTime_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => stmt.BindParameter(1, new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), (SQLiteDateTimeFormat)int.MaxValue));
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
@@ -702,7 +702,7 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_NamedParameter_ISO8601Text_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 #pragma warning disable DNSQLL001 // Type or member is obsolete
@@ -725,10 +725,10 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_NamedParameter_ISO8601Text_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        stmt.BindParameter("@value"u8, dateTime, SQLiteDateTimeFormat.ISO8601Text);
+        stmt.BindParameter("@value\0"u8, dateTime, SQLiteDateTimeFormat.ISO8601Text);
 
         stmt.NewRowStep();
 
@@ -745,7 +745,7 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_UnixTimeInteger_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.UnixTimeInteger);
@@ -765,7 +765,7 @@ public class SQLiteStatementTests
     public void BindDateTimeValue_JulianDateReal_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.JulianDateReal);
@@ -785,7 +785,7 @@ public class SQLiteStatementTests
     public void BindNullValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
         stmt.BindNullToParameter(1);
 
@@ -809,7 +809,7 @@ public class SQLiteStatementTests
     public void BindNullValue_NamedParameter_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
 #pragma warning disable DNSQLL001 // Type or member is obsolete
         Assert.Throws<ArgumentNullException>(() => stmt.BindNullToParameter((string)null!));
@@ -828,9 +828,9 @@ public class SQLiteStatementTests
     public void BindNullValue_NamedParameter_U8_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;"u8);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT @value;\0"u8);
 
-        stmt.BindNullToParameter("@value"u8);
+        stmt.BindNullToParameter("@value\0"u8);
 
         stmt.NewRowStep();
 
@@ -844,19 +844,19 @@ public class SQLiteStatementTests
     public void TryNewStep_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
-        conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
-        conn.ExecuteNonQuery("INSERT INTO t VALUES (42);"u8);
+        conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+        conn.ExecuteNonQuery("INSERT INTO t VALUES (42);\0"u8);
         long rowid = conn.GetLastInsertRowid();
         Assert.Equal(1, rowid);
-        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 424 FROM t WHERE (x = @testX);"u8);
-        stmt.BindParameter("@testX"u8, 0);
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 424 FROM t WHERE (x = @testX);\0"u8);
+        stmt.BindParameter("@testX\0"u8, 0);
 
         bool res = stmt.TryNewRowStep();
         Assert.False(res);
 
         stmt.Reset();
 
-        stmt.BindParameter("@testX"u8, 42);
+        stmt.BindParameter("@testX\0"u8, 42);
 
         res = stmt.TryNewRowStep();
         Assert.True(res);

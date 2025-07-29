@@ -69,7 +69,10 @@ public sealed class SQLiteConnection : IDisposable
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public SQLiteStatement PrepareStatement(string sqlStatement)
-        => sqlStatement is null ? throw new ArgumentNullException(nameof(sqlStatement)) : DoPrepareStatement(sqlStatement);
+    {
+        ArgumentNullException.ThrowIfNull(sqlStatement);
+        return DoPrepareStatement(sqlStatement);
+    }
 
     /// <summary>
     /// Prepare a SQLite statement.
@@ -78,7 +81,10 @@ public sealed class SQLiteConnection : IDisposable
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     public SQLiteStatement PrepareStatement(ReadOnlySpan<byte> sqlStatement)
-        => DoPrepareStatement(sqlStatement);
+    {
+        SQLiteException.ThrowIfNotNullTerminated(sqlStatement);
+        return DoPrepareStatement(sqlStatement);
+    }
 
     /// <summary>
     /// Prepare and execute a non query SQL statement.
@@ -99,6 +105,7 @@ public sealed class SQLiteConnection : IDisposable
     /// <param name="sqlStatement">The null-terminated SQL statement.</param>
     public void ExecuteNonQuery(ReadOnlySpan<byte> sqlStatement)
     {
+        SQLiteException.ThrowIfNotNullTerminated(sqlStatement);
         using SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
         stmt.DoneStep();
     }
@@ -131,6 +138,8 @@ public sealed class SQLiteConnection : IDisposable
     /// <returns>The contents of the first result column.</returns>
     public string ExecuteScalarStringQuery(ReadOnlySpan<byte> sqlStatement)
     {
+        SQLiteException.ThrowIfNotNullTerminated(sqlStatement);
+
         string value;
         using (SQLiteStatement stmt = DoPrepareStatement(sqlStatement))
         {
@@ -166,6 +175,8 @@ public sealed class SQLiteConnection : IDisposable
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     public SQLiteStatement PrepareStatementAndNewRowStep(ReadOnlySpan<byte> sqlStatement)
     {
+        SQLiteException.ThrowIfNotNullTerminated(sqlStatement);
+
         SQLiteStatement stmt = DoPrepareStatement(sqlStatement);
         stmt.NewRowStep();
         return stmt;
@@ -189,18 +200,10 @@ public sealed class SQLiteConnection : IDisposable
         _handle.Dispose();
     }
 
-    private static unsafe SQLiteConnection Create(string fileName, int flags)
+    private static SQLiteConnection Create(string fileName, int flags)
     {
         ArgumentNullException.ThrowIfNull(fileName);
-
-        byte* utf8Filename = NativeMethods.ToUtf8BytePtr(fileName);
-        int result = NativeMethods.sqlite3_open_v2(utf8Filename, out SQLiteConnectionHandle connectionHandle, flags, IntPtr.Zero);
-        NativeMethods.FreeUtf8BytePtr(utf8Filename);
-        NativeMethods.CheckResult(result, "sqlite3_open", null);
-
-        result = NativeMethods.sqlite3_extended_result_codes(connectionHandle, 1);
-        NativeMethods.CheckResult(result, "sqlite3_extended_result_codes", connectionHandle);
-
+        SQLiteConnectionHandle connectionHandle = NativeMethods.Sqlite3OpenV2(fileName, flags);
         return new SQLiteConnection(connectionHandle);
     }
 
@@ -214,7 +217,8 @@ public sealed class SQLiteConnection : IDisposable
 
     private SQLiteStatement DoPrepareStatement(ReadOnlySpan<byte> sqlStatement)
     {
-        var stmt = SQLiteStatement.Create(_handle, sqlStatement);
+        // The caller must ensure that the sqlStatement is not null and null-terminated!
+        var stmt = SQLiteStatement.CreateCore(_handle, sqlStatement);
         _statements.Add(stmt);
         return stmt;
     }

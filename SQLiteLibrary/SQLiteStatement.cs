@@ -2,6 +2,7 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
@@ -35,8 +36,10 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="utf8Text">UTF8 text value of the parameter.</param>
     public void BindTextParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> utf8Text)
     {
-        int idx = GetParameterIndex(parameterName);
-        BindTextParameter(idx, utf8Text);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(utf8Text);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
+        NativeMethods.BindText(_handle, _connectionHandle, idx, utf8Text);
     }
 
     /// <summary>
@@ -46,19 +49,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="utf8Text">UTF8 text value of the parameter.</param>
     public void BindTextParameter(int index, ReadOnlySpan<byte> utf8Text)
     {
-        if (utf8Text.IsEmpty)
-        {
-            throw new ArgumentNullException(nameof(utf8Text));
-        }
-
-        unsafe
-        {
-            fixed (byte* bytes = utf8Text)
-            {
-                int result = NativeMethods.sqlite3_bind_text(_handle, index, bytes, -1, NativeMethods.SQLITE_TRANSIENT);
-                NativeMethods.CheckResult(result, "sqlite3_bind_text", _connectionHandle);
-            }
-        }
+        SQLiteException.ThrowIfNotNullTerminated(utf8Text);
+        NativeMethods.BindText(_handle, _connectionHandle, index, utf8Text);
     }
 
     /// <summary>
@@ -69,7 +61,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindBlobParameter(string parameterName, ReadOnlySpan<byte> value)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindBlobParameter(idx, value);
     }
 
@@ -80,7 +73,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="value">Value of the parameter.</param>
     public void BindBlobParameter(ReadOnlySpan<byte> parameterName, ReadOnlySpan<byte> value)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindBlobParameter(idx, value);
     }
 
@@ -93,17 +87,10 @@ public sealed partial class SQLiteStatement : IDisposable
     {
         if (value.IsEmpty)
         {
-            throw new ArgumentNullException(nameof(value));
+            ThrowIfValueIsEmpty(nameof(value));
         }
 
-        unsafe
-        {
-            fixed (byte* bytes = value)
-            {
-                int result = NativeMethods.sqlite3_bind_blob(_handle, index, bytes, value.Length, NativeMethods.SQLITE_TRANSIENT);
-                NativeMethods.CheckResult(result, "sqlite3_bind_blob", _connectionHandle);
-            }
-        }
+        NativeMethods.BindBlob(_handle, _connectionHandle, index, value);
     }
 
     /// <summary>
@@ -144,7 +131,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindParameter(string parameterName, DateTime value, SQLiteDateTimeFormat format)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value, format);
     }
 
@@ -156,7 +144,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="format">Database representation format of the value.</param>
     public void BindParameter(ReadOnlySpan<byte> parameterName, DateTime value, SQLiteDateTimeFormat format)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindParameter(idx, value, format);
     }
 
@@ -177,7 +166,8 @@ public sealed partial class SQLiteStatement : IDisposable
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
     public void BindNullToParameter(string parameterName)
     {
-        int idx = GetParameterIndex(parameterName ?? throw new ArgumentNullException(nameof(parameterName)));
+        ArgumentNullException.ThrowIfNull(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindNullToParameter(idx);
     }
 
@@ -187,7 +177,8 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="parameterName">Name of the parameter.</param>
     public void BindNullToParameter(ReadOnlySpan<byte> parameterName)
     {
-        int idx = GetParameterIndex(parameterName);
+        SQLiteException.ThrowIfNotNullTerminated(parameterName);
+        int idx = NativeMethods.GetParameterIndex(_handle, parameterName);
         BindNullToParameter(idx);
     }
 
@@ -337,34 +328,10 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
     [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
+    internal static SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, string sqlStatement)
     {
-        SQLiteStatement sqliteStatement;
-        SQLiteStatementHandle? statementHandle = null;
-        byte* utf8SQLStatement = NativeMethods.ToUtf8BytePtr(sqlStatement);
-        try
-        {
-            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out byte* tail);
-            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
-            if (*tail != 0)
-            {
-                string remainder = NativeMethods.FromUtf8(tail);
-                if (!string.IsNullOrEmpty(remainder))
-                {
-                    throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
-                }
-            }
-
-            sqliteStatement = new SQLiteStatement(statementHandle, connectionHandle);
-            statementHandle = null;
-        }
-        finally
-        {
-            statementHandle?.Dispose();
-            NativeMethods.FreeUtf8BytePtr(utf8SQLStatement);
-        }
-
-        return sqliteStatement;
+        SQLiteStatementHandle statementHandle = NativeMethods.PrepareStatementHandle(connectionHandle, sqlStatement);
+        return new SQLiteStatement(statementHandle, connectionHandle);
     }
 
     /// <summary>
@@ -374,23 +341,11 @@ public sealed partial class SQLiteStatement : IDisposable
     /// <param name="sqlStatement">The null terminated SQL statement.</param>
     /// <returns>The prepared SQL statement and part of the statement after the first SQL command.</returns>
     /// <exception cref="SQLiteException">Thrown when the native SQLite library returns an error.</exception>
-    internal static unsafe SQLiteStatement Create(SQLiteConnectionHandle connectionHandle, ReadOnlySpan<byte> sqlStatement)
+    internal static SQLiteStatement CreateCore(SQLiteConnectionHandle connectionHandle, ReadOnlySpan<byte> sqlStatement)
     {
-        fixed (byte* utf8SQLStatement = sqlStatement)
-        {
-            int result = NativeMethods.sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle? statementHandle, out byte* tail);
-            NativeMethods.CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
-            if (*tail != 0)
-            {
-                string remainder = NativeMethods.FromUtf8(tail);
-                if (!string.IsNullOrEmpty(remainder))
-                {
-                    throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
-                }
-            }
-
-            return new SQLiteStatement(statementHandle, connectionHandle);
-        }
+        // The caller must ensure that the sqlStatement is not null and null-terminated!
+        SQLiteStatementHandle statementHandle = NativeMethods.PrepareStatementHandle(connectionHandle, sqlStatement);
+        return new SQLiteStatement(statementHandle, connectionHandle);
     }
 
     private static double ToJulianDate(DateTime dateTime)
@@ -449,23 +404,9 @@ public sealed partial class SQLiteStatement : IDisposable
         return new DateTime(year, month, day, hour, minute, second, millisecond, DateTimeKind.Utc);
     }
 
-    [Obsolete("Use UTF8 string method instead.", DiagnosticId = "DNSQLL001")]
-    private unsafe int GetParameterIndex(string parameterName)
-    {
-        byte* ut8Text = NativeMethods.ToUtf8BytePtr(parameterName);
-        int idx = NativeMethods.sqlite3_bind_parameter_index(_handle, ut8Text);
-        NativeMethods.FreeUtf8BytePtr(ut8Text);
-        return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{parameterName}' was not found in the prepared statement!") : idx;
-    }
-
-    private unsafe int GetParameterIndex(ReadOnlySpan<byte> parameterName)
-    {
-        fixed (byte* ut8Text = parameterName)
-        {
-            int idx = NativeMethods.sqlite3_bind_parameter_index(_handle, ut8Text);
-            return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{NativeMethods.FromUtf8(ut8Text)}' was not found in the prepared statement!") : idx;
-        }
-    }
+    [DoesNotReturn]
+    private static void ThrowIfValueIsEmpty(string paramName)
+        => throw new ArgumentNullException(paramName);
 
     private double DoGetColumnDoubleValue(int columnIndex, SQLiteDataType type)
     {
@@ -496,8 +437,7 @@ public sealed partial class SQLiteStatement : IDisposable
             throw new InvalidDataException($"Expected type text, but column is of type {type}!");
         }
 
-        IntPtr utf8Text = NativeMethods.sqlite3_column_text(_handle, columnIndex);
-        return NativeMethods.FromUtf8(utf8Text);
+        return NativeMethods.GetColumnText(_handle, columnIndex);
     }
 
     private byte[] DoGetColumnBlobValue(int columnIndex, SQLiteDataType type)

@@ -2,8 +2,6 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
-using System.Text;
-
 namespace SQLiteLibrary;
 
 /// <summary>

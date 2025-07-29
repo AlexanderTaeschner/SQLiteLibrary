@@ -29,7 +29,7 @@ public class SQLitePreparedConnectionTests
 
         using (var conn = SQLiteConnection.CreateNewOrOpenExistingDb(FileName))
         {
-            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
+            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
         }
 
         Assert.True(File.Exists(FileName));
@@ -56,16 +56,16 @@ public class SQLitePreparedConnectionTests
 
         using (var conn = SQLiteConnection.CreateNewOrOpenExistingDb(FileName))
         {
-            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);"u8);
+            conn.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
         }
 
         Assert.True(File.Exists(FileName));
 
         Dictionary<SQLitePreparedConnectionTestStatements, byte[]> sqlTextDictionary = new()
         {
-            { SQLitePreparedConnectionTestStatements.InsertValue, "INSERT INTO t VALUES (@value);"u8.ToArray() },
-            { SQLitePreparedConnectionTestStatements.InsertValue43, "INSERT INTO t VALUES (43);"u8.ToArray() },
-            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT x FROM t;"u8.ToArray() },
+            { SQLitePreparedConnectionTestStatements.InsertValue, "INSERT INTO t VALUES (@value);\0"u8.ToArray() },
+            { SQLitePreparedConnectionTestStatements.InsertValue43, "INSERT INTO t VALUES (43);\0"u8.ToArray() },
+            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT x FROM t;\0"u8.ToArray() },
         };
 
         _openDatabaseCalls = 0;
@@ -79,7 +79,7 @@ public class SQLitePreparedConnectionTests
         for (i = 1; i <= 42; i++)
         {
             SQLiteStatement insertStmt = preparedConnection.GetStatement(SQLitePreparedConnectionTestStatements.InsertValue);
-            insertStmt.BindParameter("@value"u8, i);
+            insertStmt.BindParameter("@value\0"u8, i);
             insertStmt.DoneStep();
             preparedConnection.Return(insertStmt);
         }
