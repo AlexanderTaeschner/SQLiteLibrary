@@ -408,7 +408,7 @@ internal static partial class NativeMethods
         => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
 
     [DoesNotReturn]
-    private static unsafe void ThrowSQLiteException(int result, string method, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
+    private static void ThrowSQLiteException(int result, string method, SQLiteConnectionHandle? connectionHandle, string? sqlStatement = null)
         => throw SQLiteException.Create(result, method, connectionHandle, sqlStatement);
 
     [LibraryImport(SQLiteLibraryFileName)]

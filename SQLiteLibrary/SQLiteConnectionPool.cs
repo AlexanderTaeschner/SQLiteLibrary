@@ -78,7 +78,7 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
         lock (_lock)
         {
             rentedStatement.Statement.Reset();
-            _rentedStatements.Remove(rentedStatement);
+            _ = _rentedStatements.Remove(rentedStatement);
 
             if (!_pool.TryGetValue(rentedStatement.SQLTextKey, out List<SQLitePooledStatement<TEnum>>? objList))
             {

@@ -24,7 +24,7 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<AnalysisLevel>latest</AnalysisLevel>
+		<AnalysisLevel>preview-recommended</AnalysisLevel>
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 	</PropertyGroup>
 	
