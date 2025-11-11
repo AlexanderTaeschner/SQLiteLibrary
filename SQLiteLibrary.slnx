@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="appveyor.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="SQLiteLibrary/SQLiteLibrary.csproj" />
+  <Project Path="SQLiteLibraryTest/SQLiteLibraryTest.csproj" />
+</Solution>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<DebugType>embedded</DebugType>
@@ -15,12 +15,11 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>1.9.0.0</Version>
+		<Version>2.0.0.1</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<PackageReleaseNotes>
-			Enforced the use of null-terminated UTF8 string literals passed to the native library, since this could otherwise lead to unexpected failure.
-			Updated the native library to version 3.50.3.
-		</PackageReleaseNotes>
+      Net 10 package. Native SQLite version 3.51.0.
+    </PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

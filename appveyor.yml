@@ -1,7 +1,16 @@
 # common configuration for ALL branches
 image: Visual Studio 2022
 
+install:
+- ps: |
+    Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
+    & $env:temp\dotnet-install.ps1 -Architecture x64 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"
+- ps: |
+    Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
+    & $env:temp\dotnet-install.ps1 -Architecture x86 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"
+
 before_build:
+  - cmd: dotnet --version
   - nuget restore
 
 build:
@@ -17,7 +26,7 @@ branches:
   only:
   - main
 
-version: 1.9.0.0-{build}
+version: 2.0.0.1-{build}
 
 artifacts:
   - path: '**\*.nupkg'
