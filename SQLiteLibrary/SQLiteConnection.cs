@@ -12,9 +12,23 @@ public sealed class SQLiteConnection : IDisposable
     private readonly SQLiteConnectionHandle _handle;
     private readonly List<SQLiteStatement> _statements = [];
 
+    static SQLiteConnection()
+    {
+        NativeMethods.SetErrorLogCallback(
+            (errorCode, message) => LogErrorMessage?.Invoke(errorCode, message));
+    }
+
     private SQLiteConnection(SQLiteConnectionHandle connectionHandle) => _handle = connectionHandle;
 
     private SQLiteConnection() => throw new NotSupportedException();
+
+    /// <summary>
+    /// Occurs when an error message is logged, allowing subscribers to handle or process error events.
+    /// </summary>
+    /// <remarks>Subscribers can use this event to capture error details for logging, monitoring, or custom
+    /// error handling. The event is static, so handlers should be attached at the class level. Ensure that event
+    /// handlers do not throw exceptions, as this may disrupt error processing.</remarks>
+    public static event ErrorLogCallback? LogErrorMessage;
 
     /// <summary>
     /// Creates a SQLite connection to a temporary in-memory database.

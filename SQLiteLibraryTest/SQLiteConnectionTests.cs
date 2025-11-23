@@ -45,6 +45,8 @@ public class SQLiteConnectionTests
     [Fact]
     public void Prepare_Statement_Throws_On_SQL_Error_Works()
     {
+        List<(int ErrCode, string Message)> errors = [];
+        SQLiteConnection.LogErrorMessage += (errorCode,message) => errors.Add((errorCode, message));
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT * FROM t;\0"u8));
         Assert.Equal("SELECT * FROM t;", exception.SqlStatement);
@@ -53,6 +55,9 @@ public class SQLiteConnectionTests
         Assert.Equal("sqlite3_prepare_v2", exception.NativeMethod);
         Assert.Equal("no such table: t", exception.NativeErrorMessage);
         Assert.Equal("SQLiteLibrary.SQLiteException: Native method sqlite3_prepare_v2 returned error code SQL logic error(1): 'no such table: t'!", exception.Message);
+        (int errCode, string message) = Assert.Single(errors);
+        Assert.Equal(1, errCode);
+        Assert.Equal("no such table: t in \"SELECT * FROM t;\"", message);
     }
 
     [Fact]

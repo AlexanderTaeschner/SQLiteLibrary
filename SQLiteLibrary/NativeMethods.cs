@@ -8,6 +8,15 @@ using System.Text;
 
 namespace SQLiteLibrary;
 
+/// <summary>
+/// Represents a callback method that handles error logging by receiving an error code and a descriptive message.
+/// </summary>
+/// <param name="errorCode">The numeric code identifying the type or category of the error. Typically used to distinguish between different
+/// error conditions.</param>
+/// <param name="message">A descriptive message providing details about the error. This message is intended for logging or diagnostic
+/// purposes.</param>
+public delegate void ErrorLogCallback(int errorCode, string message);
+
 internal static partial class NativeMethods
 {
     /// <summary>
@@ -64,6 +73,8 @@ internal static partial class NativeMethods
 
     private const string SQLiteLibraryFileName = "sqlite3.dll";
 
+    private const int SQLITE_CONFIG_LOG = 16;
+
     static NativeMethods()
     {
         string? path = new Uri(typeof(NativeMethods).Assembly.Location).LocalPath;
@@ -92,6 +103,8 @@ internal static partial class NativeMethods
 
         throw new FileNotFoundException("Could not load native SQLite library!");
     }
+
+    private unsafe delegate void NativeErrorLogCallback(IntPtr data, int errorCode, byte* message);
 
     internal static void CheckResult(int result, string method, SQLiteConnectionHandle? connectionHandle)
     {
@@ -363,6 +376,25 @@ internal static partial class NativeMethods
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
     internal static partial int sqlite3_column_type(SQLiteStatementHandle statementHandle, int columnIndex);
+
+    internal static void SetErrorLogCallback(ErrorLogCallback errorLogCallback)
+    {
+        unsafe
+        {
+            void nativeCallback(nint data, int errorCode, byte* message)
+            {
+                string msg = FromUtf8(message);
+                errorLogCallback(errorCode, msg);
+            }
+
+            int result = sqlite3_config(SQLITE_CONFIG_LOG, nativeCallback, IntPtr.Zero);
+            CheckResult(result, "sqlite3_config", null);
+        }
+    }
+
+    [LibraryImport(SQLiteLibraryFileName)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
+    private static partial int sqlite3_config(int option, NativeErrorLogCallback errorLogCallback, IntPtr data);
 
     /* Not used at the moment, but might be useful in the future.
     [LibraryImport(SQLiteLibraryFileName)]
