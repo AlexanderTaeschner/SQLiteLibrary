@@ -134,7 +134,7 @@ internal static partial class NativeMethods
         SQLiteConnectionHandle connectionHandle;
         unsafe
         {
-            byte* utf8Filename = ToUtf8BytePtr(fileName);
+            byte* utf8Filename = ToUtf8BytePtr(fileName, out _);
             result = sqlite3_open_v2(utf8Filename, out connectionHandle, flags, IntPtr.Zero);
             FreeUtf8BytePtr(utf8Filename);
         }
@@ -151,10 +151,10 @@ internal static partial class NativeMethods
         SQLiteStatementHandle? statementHandle = null;
         unsafe
         {
-            byte* utf8SQLStatement = ToUtf8BytePtr(sqlStatement);
+            byte* utf8SQLStatement = ToUtf8BytePtr(sqlStatement, out int byteCount);
             try
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out IntPtr tail);
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, byteCount, out statementHandle, out IntPtr tail);
                 CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
                 if (tail != 0)
                 {
@@ -187,7 +187,7 @@ internal static partial class NativeMethods
         {
             fixed (byte* utf8SQLStatement = sqlStatement)
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle statementHandle, out IntPtr tail);
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, sqlStatement.Length, out SQLiteStatementHandle statementHandle, out IntPtr tail);
                 CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
                 if (tail != 0)
                 {
@@ -220,8 +220,8 @@ internal static partial class NativeMethods
     {
         unsafe
         {
-            byte* bytes = ToUtf8BytePtr(value);
-            int result = sqlite3_bind_text(handle, index, bytes, -1, SQLITE_TRANSIENT);
+            byte* bytes = ToUtf8BytePtr(value, out int byteCount);
+            int result = sqlite3_bind_text(handle, index, bytes, byteCount, SQLITE_TRANSIENT);
             FreeUtf8BytePtr(bytes);
             CheckResult(result, "sqlite3_bind_text", connectionHandle);
         }
@@ -243,7 +243,7 @@ internal static partial class NativeMethods
     {
         unsafe
         {
-            byte* ut8Text = ToUtf8BytePtr(parameterName);
+            byte* ut8Text = ToUtf8BytePtr(parameterName, out _);
             int idx = sqlite3_bind_parameter_index(handle, ut8Text);
             FreeUtf8BytePtr(ut8Text);
             return idx == 0 ? throw new KeyNotFoundException($"Paramter name '{parameterName}' was not found in the prepared statement!") : idx;
@@ -413,12 +413,14 @@ internal static partial class NativeMethods
     /// cref="Marshal.FreeCoTaskMem(IntPtr)"/>  to avoid memory leaks. The returned pointer is allocated using COM task
     /// memory.</remarks>
     /// <param name="s">The string to convert. If <see langword="null"/>, the method returns <see langword="null"/>.</param>
+    /// <param name="byteCount">The number of bytes in the UTF-8 encoded string, including the null terminator.</param>
     /// <returns>A pointer to a null-terminated UTF-8 encoded byte array representing the input string,  or <see
     /// langword="null"/> if the input string is <see langword="null"/>.</returns>
-    private static unsafe byte* ToUtf8BytePtr(string s)
+    private static unsafe byte* ToUtf8BytePtr(string s, out int byteCount)
     {
         if (s is null)
         {
+            byteCount = 0;
             return null;
         }
 
@@ -426,7 +428,7 @@ internal static partial class NativeMethods
         byte* mem = (byte*)Marshal.AllocCoTaskMem(exactByteCount);
         Span<byte> buffer = new(mem, exactByteCount);
 
-        int byteCount = Encoding.UTF8.GetBytes(s, buffer);
+        byteCount = Encoding.UTF8.GetBytes(s, buffer);
         buffer[byteCount] = 0; // null-terminate
         return mem;
     }
