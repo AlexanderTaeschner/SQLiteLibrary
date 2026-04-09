@@ -154,9 +154,9 @@ internal static partial class NativeMethods
             byte* utf8SQLStatement = ToUtf8BytePtr(sqlStatement);
             try
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out byte* tail);
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out statementHandle, out IntPtr tail);
                 CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
-                if (*tail != 0)
+                if (tail != 0)
                 {
                     string remainder = FromUtf8(tail);
                     if (!string.IsNullOrEmpty(remainder))
@@ -187,9 +187,9 @@ internal static partial class NativeMethods
         {
             fixed (byte* utf8SQLStatement = sqlStatement)
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle statementHandle, out byte* tail);
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, -1, out SQLiteStatementHandle statementHandle, out IntPtr tail);
                 CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
-                if (*tail != 0)
+                if (tail != 0)
                 {
                     string remainder = FromUtf8(tail);
                     if (!string.IsNullOrEmpty(remainder))
@@ -461,7 +461,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    private static unsafe partial int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out byte* tail);
+    private static unsafe partial int sqlite3_prepare_v2(SQLiteConnectionHandle connectionHandle, byte* utf8SQLStatement, int utf8SQLStatementByteLength, out SQLiteStatementHandle statementHandle, out IntPtr tail);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
