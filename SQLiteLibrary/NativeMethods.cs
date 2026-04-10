@@ -75,6 +75,8 @@ internal static partial class NativeMethods
 
     private const int SQLITE_CONFIG_LOG = 16;
 
+    private static NativeErrorLogCallback? s_nativeErrorLogCallback;
+
     static NativeMethods()
     {
         string? path = new Uri(typeof(NativeMethods).Assembly.Location).LocalPath;
@@ -381,13 +383,13 @@ internal static partial class NativeMethods
     {
         unsafe
         {
-            void nativeCallback(nint data, int errorCode, byte* message)
+            s_nativeErrorLogCallback = (nint data, int errorCode, byte* message) =>
             {
                 string msg = FromUtf8(message);
                 errorLogCallback(errorCode, msg);
-            }
+            };
 
-            int result = sqlite3_config(SQLITE_CONFIG_LOG, nativeCallback, IntPtr.Zero);
+            int result = sqlite3_config(SQLITE_CONFIG_LOG, s_nativeErrorLogCallback, IntPtr.Zero);
             CheckResult(result, "sqlite3_config", null);
         }
     }
