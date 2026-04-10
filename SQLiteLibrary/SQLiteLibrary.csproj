@@ -15,9 +15,9 @@
 		<PackageProjectUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/AlexanderTaeschner/SQLiteLibrary.git</RepositoryUrl>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Version>2.0.3.4</Version>
+		<Version>2.0.4.0</Version>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageReleaseNotes>Updated native Dlls to 3.52.0.</PackageReleaseNotes>
+		<PackageReleaseNotes>Updated native Dlls to 3.53.0.</PackageReleaseNotes>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -57,7 +57,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.103" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.201" PrivateAssets="All" />
 		<PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
