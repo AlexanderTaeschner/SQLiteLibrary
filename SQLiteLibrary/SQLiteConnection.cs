@@ -9,14 +9,13 @@ namespace SQLiteLibrary;
 /// </summary>
 public sealed class SQLiteConnection : IDisposable
 {
+    private static readonly ErrorLogCallback s_errorLogCallback =
+        (errorCode, message) => LogErrorMessage?.Invoke(errorCode, message);
+
     private readonly SQLiteConnectionHandle _handle;
     private readonly List<SQLiteStatement> _statements = [];
 
-    static SQLiteConnection()
-    {
-        NativeMethods.SetErrorLogCallback(
-            (errorCode, message) => LogErrorMessage?.Invoke(errorCode, message));
-    }
+    static SQLiteConnection() => NativeMethods.SetErrorLogCallback(s_errorLogCallback);
 
     private SQLiteConnection(SQLiteConnectionHandle connectionHandle) => _handle = connectionHandle;
 
