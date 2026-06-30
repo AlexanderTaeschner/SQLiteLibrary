@@ -1,18 +1,5 @@
 # common configuration for ALL branches
-image: Visual Studio 2022
-
-# install currecnt .NET SDKs (https://dotnet.microsoft.com/en-us/download/dotnet)
-install:
-- ps: |
-    Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-    & $env:temp\dotnet-install.ps1 -Architecture x64 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"
-- ps: |
-    Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-    & $env:temp\dotnet-install.ps1 -Architecture x86 -Version '10.0.100' -InstallDir "$env:ProgramFiles\dotnet"
-
-before_build:
-  - cmd: dotnet --version
-  - nuget restore
+image: Visual Studio 2026
 
 build:
   project: SQLiteLibrary\SQLiteLibrary.csproj
@@ -27,7 +14,7 @@ branches:
   only:
   - main
 
-version: 2.0.6.0-{build}
+version: 2.0.7.0-{build}
 
 artifacts:
   - path: '**\*.nupkg'
