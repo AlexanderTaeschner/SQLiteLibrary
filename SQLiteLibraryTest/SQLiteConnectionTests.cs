@@ -3,10 +3,12 @@
 // </copyright>
 
 using SQLiteLibrary;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace SQLiteLibraryTest;
 
+[ExcludeFromCodeCoverage]
 public class SQLiteConnectionTests
 {
     [Fact]
@@ -54,7 +56,7 @@ public class SQLiteConnectionTests
         Assert.Equal("SQL logic error", exception.ResultCodeName);
         Assert.Equal("sqlite3_prepare_v2", exception.NativeMethod);
         Assert.Equal("no such table: t", exception.NativeErrorMessage);
-        Assert.Equal("SQLiteLibrary.SQLiteException: Native method sqlite3_prepare_v2 returned error code SQL logic error(1): 'no such table: t'!", exception.Message);
+        Assert.Equal("Native method sqlite3_prepare_v2 returned error code SQL logic error(1): 'no such table: t'!", exception.Message);
         (int errCode, string message) = Assert.Single(errors);
         Assert.Equal(1, errCode);
         Assert.Equal("no such table: t in \"SELECT * FROM t;\"", message);
@@ -71,6 +73,13 @@ public class SQLiteConnectionTests
         Assert.Equal(string.Empty, exception.NativeMethod);
         Assert.Equal(string.Empty, exception.NativeErrorMessage);
         Assert.Equal("The UTF8 text in parameter 'sqlStatement' must be null terminated!", exception.Message);
+    }
+
+    [Fact]
+    public void Prepare_Statement_Throws_On_Empty_Utf8_Text()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        _ = Assert.Throws<ArgumentNullException>(() => conn.PrepareStatement([]));
     }
 
     [Fact]

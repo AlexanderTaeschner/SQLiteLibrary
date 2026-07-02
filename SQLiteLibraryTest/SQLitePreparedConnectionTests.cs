@@ -3,10 +3,12 @@
 // </copyright>
 
 using SQLiteLibrary;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace SQLiteLibraryTest;
 
+[ExcludeFromCodeCoverage]
 public class SQLitePreparedConnectionTests
 {
     private const string FileName = "SQLitePreparedConnectionTests_TestDb.sqlite";
@@ -71,6 +73,52 @@ public class SQLitePreparedConnectionTests
         _openDatabaseCalls = 0;
         using var preparedConnection = new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(sqlTextDictionary, CreateSQLiteConnection);
         TestPreparedConnection(preparedConnection);
+    }
+
+    [Fact]
+    public void SQLitePreparedConnection_Ctor_Throws_On_Null_Arguments()
+    {
+        _ = Assert.Throws<ArgumentNullException>(() => new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>((IReadOnlyDictionary<SQLitePreparedConnectionTestStatements, string>)null!, CreateSQLiteConnection));
+        _ = Assert.Throws<ArgumentNullException>(() => new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>((IReadOnlyDictionary<SQLitePreparedConnectionTestStatements, byte[]>)null!, CreateSQLiteConnection));
+
+        Dictionary<SQLitePreparedConnectionTestStatements, string> stringDictionary = new()
+        {
+            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT 1;" },
+        };
+
+        Dictionary<SQLitePreparedConnectionTestStatements, byte[]> byteDictionary = new()
+        {
+            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT 1;\0"u8.ToArray() },
+        };
+
+        _ = Assert.Throws<ArgumentNullException>(() => new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(stringDictionary, null!));
+        _ = Assert.Throws<ArgumentNullException>(() => new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(byteDictionary, null!));
+    }
+
+    [Fact]
+    public void SQLitePreparedConnection_Return_Null_Works()
+    {
+        Dictionary<SQLitePreparedConnectionTestStatements, byte[]> sqlTextDictionary = new()
+        {
+            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT 1;\0"u8.ToArray() },
+        };
+
+        using var preparedConnection = new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(sqlTextDictionary, SQLiteConnection.CreateTemporaryInMemoryDb);
+
+        preparedConnection.Return(null!);
+    }
+
+    [Fact]
+    public void SQLitePreparedConnection_Dispose_Twice_Works()
+    {
+        Dictionary<SQLitePreparedConnectionTestStatements, byte[]> sqlTextDictionary = new()
+        {
+            { SQLitePreparedConnectionTestStatements.SelectValue, "SELECT 1;\0"u8.ToArray() },
+        };
+
+        var preparedConnection = new SQLitePreparedConnection<SQLitePreparedConnectionTestStatements>(sqlTextDictionary, SQLiteConnection.CreateTemporaryInMemoryDb);
+        preparedConnection.Dispose();
+        preparedConnection.Dispose();
     }
 
     private void TestPreparedConnection(SQLitePreparedConnection<SQLitePreparedConnectionTestStatements> preparedConnection)

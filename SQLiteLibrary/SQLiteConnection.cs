@@ -10,7 +10,7 @@ namespace SQLiteLibrary;
 public sealed class SQLiteConnection : IDisposable
 {
     private static readonly ErrorLogCallback s_errorLogCallback =
-        (errorCode, message) => LogErrorMessage?.Invoke(errorCode, message);
+        DefaultErrorLogCallback;
 
     private readonly SQLiteConnectionHandle _handle;
     private readonly List<SQLiteStatement> _statements = [];
@@ -212,6 +212,9 @@ public sealed class SQLiteConnection : IDisposable
         _statements.Clear();
         _handle.Dispose();
     }
+
+    private static void DefaultErrorLogCallback(int errorCode, string message)
+        => LogErrorMessage?.Invoke(errorCode, message);
 
     private static SQLiteConnection Create(string fileName, int flags)
     {

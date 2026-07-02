@@ -12,19 +12,16 @@ namespace SQLiteLibrary;
 /// </summary>
 public class SQLiteException : Exception
 {
-    internal SQLiteException()
-    {
-    }
-
     internal SQLiteException(string message)
         : base(message)
     {
     }
 
-    internal SQLiteException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+    /// <summary>
+    /// Prevents a default instance of the <see cref="SQLiteException"/> class from being created.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    private SQLiteException() => throw new NotSupportedException();
 
     private SQLiteException(string message, int resultCode, string nativeMethod, string resultCodeName, string nativeErrorMessage, string? sqlStatement = null)
         : base(message)
@@ -83,7 +80,7 @@ public class SQLiteException : Exception
             nativeErrorMessage = NativeMethods.GetErrorMessage(connectionHandle);
         }
 
-        string message = $"SQLiteLibrary.SQLiteException: Native method {nativeMethod} returned error code {resultCodeName}({resultCode}): '{nativeErrorMessage}'!";
+        string message = $"Native method {nativeMethod} returned error code {resultCodeName}({resultCode}): '{nativeErrorMessage}'!";
         return new SQLiteException(message, resultCode, nativeMethod, resultCodeName, nativeErrorMessage, sqlStatement);
     }
 

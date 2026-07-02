@@ -2,6 +2,8 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace SQLiteLibrary;
 
 /// <summary>
@@ -33,6 +35,10 @@ public sealed class SQLiteConnectionPool<TEnum> : IDisposable
         _createSQLiteConnection = createSQLiteConnection;
     }
 
+    /// <summary>
+    /// Prevents a default instance of the <see cref="SQLiteConnectionPool{TEnum}"/> class from being created.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
     private SQLiteConnectionPool() => throw new NotSupportedException();
 
     /// <summary>

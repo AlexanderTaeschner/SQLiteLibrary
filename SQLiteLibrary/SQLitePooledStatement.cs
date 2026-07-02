@@ -2,6 +2,8 @@
 // Copyright (c) Alexander Täschner. All rights reserved.
 // </copyright>
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace SQLiteLibrary;
 
 /// <summary>
@@ -27,6 +29,11 @@ public sealed class SQLitePooledStatement<TEnum> : IDisposable
         Statement = statement;
     }
 
+    /// <summary>
+    /// Prevents a default instance of the <see cref="SQLitePooledStatement{TEnum}"/> class from being created.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Thrown always.</exception>
+    [ExcludeFromCodeCoverage]
     private SQLitePooledStatement() => throw new NotSupportedException();
 
     /// <summary>

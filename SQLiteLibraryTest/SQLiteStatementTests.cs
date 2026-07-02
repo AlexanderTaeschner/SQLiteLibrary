@@ -3,10 +3,12 @@
 // </copyright>
 
 using SQLiteLibrary;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace SQLiteLibraryTest;
 
+[ExcludeFromCodeCoverage]
 public class SQLiteStatementTests
 {
     [Fact]
@@ -57,6 +59,59 @@ public class SQLiteStatementTests
         Assert.Equal(SQLiteStepResult.Done, res);
     }
 
+    [Fact]
+    public void Step_Returns_Busy_When_Database_Is_Locked()
+    {
+        const string fileName = "SQLiteStatementTests_Step_Busy.sqlite";
+        if (File.Exists(fileName))
+        {
+            File.Delete(fileName);
+        }
+
+        using (var setupConnection = SQLiteConnection.CreateNewOrOpenExistingDb(fileName))
+        {
+            setupConnection.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+        }
+
+        using var lockConnection = SQLiteConnection.OpenExistingDb(fileName);
+        using var busyConnection = SQLiteConnection.OpenExistingDb(fileName);
+        busyConnection.SetBusyTimeout(0);
+
+        lockConnection.ExecuteNonQuery("BEGIN IMMEDIATE;\0"u8);
+        lockConnection.ExecuteNonQuery("INSERT INTO t VALUES (1);\0"u8);
+        try
+        {
+            using SQLiteStatement stmt = busyConnection.PrepareStatement("INSERT INTO t VALUES (42);\0"u8);
+            SQLiteStepResult res = stmt.Step();
+            Assert.Equal(SQLiteStepResult.Busy, res);
+        }
+        finally
+        {
+            lockConnection.ExecuteNonQuery("ROLLBACK;\0"u8);
+        }
+    }
+
+    [Fact]
+    public void Step_Throws_SQLiteException_On_Runtime_Error()
+    {
+        const string fileName = "SQLiteStatementTests_Step_ReadOnly.sqlite";
+        if (File.Exists(fileName))
+        {
+            File.Delete(fileName);
+        }
+
+        using (var setupConnection = SQLiteConnection.CreateNewOrOpenExistingDb(fileName))
+        {
+            setupConnection.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+        }
+
+        using var readOnlyConnection = SQLiteConnection.OpenExistingDbReadOnly(fileName);
+        using SQLiteStatement stmt = readOnlyConnection.PrepareStatement("INSERT INTO t VALUES (42);\0"u8);
+
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => stmt.Step());
+        Assert.Equal("Native method sqlite3_step returned error code attempt to write a readonly database(8): 'attempt to write a readonly database'!", exception.Message);
+    }
+
     [Theory]
     [InlineData("1", SQLiteDataType.Integer)]
     [InlineData("1.0", SQLiteDataType.Float)]
@@ -74,6 +129,17 @@ public class SQLiteStatementTests
         Assert.Equal(expectedType, type);
 
         stmt.DoneStep();
+    }
+
+    [Fact]
+    public void GetColumnDateTimeValue_Throws_With_Unknown_Format()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1.0;\0"u8);
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(() => stmt.GetColumnDateTimeValue(1, (SQLiteDateTimeFormat)42));
+
+        Assert.Equal("format", exception.ParamName);
     }
 
     [Fact]
@@ -103,6 +169,18 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void GetColumnDoubleValue_Throws_When_Column_Type_Is_Not_Float()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 42;\0"u8);
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() => stmt.GetColumnDoubleValue(0));
+        Assert.Equal("Expected type float, but column is of type Integer!", exception.Message);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
     public void GetColumnIntegerValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -112,6 +190,18 @@ public class SQLiteStatementTests
         Assert.Equal(42, value);
         int? value2 = stmt.GetColumnNullableIntegerValue(0);
         Assert.Equal(42, value2.GetValueOrDefault());
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void GetColumnIntegerValue_Throws_When_Column_Type_Is_Too_Large_For_Integer()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4242424242;\0"u8);
+
+        InvalidCastException exception = Assert.Throws<InvalidCastException>(() => stmt.GetColumnIntegerValue(0));
+        Assert.Equal("Integer value does not fit in 32bit int.", exception.Message);
 
         stmt.DoneStep();
     }
@@ -131,6 +221,18 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void GetColumnLongValue_Throws_When_Column_Type_Is_Not_Integer()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4.2;\0"u8);
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() => stmt.GetColumnLongValue(0));
+        Assert.Equal("Expected type integer, but column is of type Float!", exception.Message);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
     public void GetColumnStringValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -140,6 +242,18 @@ public class SQLiteStatementTests
         Assert.Equal("Adams_42", value);
         string? value2 = stmt.GetColumnNullableStringValue(0);
         Assert.Equal("Adams_42", value2);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void GetColumnStringValue_Throws_When_Column_Type_Is_Not_String()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4.2;\0"u8);
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() => stmt.GetColumnStringValue(0));
+        Assert.Equal("Expected type text, but column is of type Float!", exception.Message);
 
         stmt.DoneStep();
     }
@@ -162,6 +276,33 @@ public class SQLiteStatementTests
         Assert.Equal(0xAF, value2[0]);
         Assert.Equal(0x42, value2[1]);
         Assert.Equal(0xFA, value2[2]);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void GetColumnBlobValue_Throws_When_Column_Type_Is_Not_Blob()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT 4.2;\0"u8);
+
+        InvalidDataException exception = Assert.Throws<InvalidDataException>(() => stmt.GetColumnBlobValue(0));
+        Assert.Equal("Expected type blob, but column is of type Float!", exception.Message);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void GetColumnBlobValue_EmptyBlob_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatementAndNewRowStep("SELECT X'';\0"u8);
+
+        byte[] value = stmt.GetColumnBlobValue(0);
+        Assert.Empty(value);
+        byte[]? nullableValue = stmt.GetColumnNullableBlobValue(0);
+        Assert.NotNull(nullableValue);
+        Assert.Empty(nullableValue);
 
         stmt.DoneStep();
     }
@@ -561,6 +702,32 @@ public class SQLiteStatementTests
     }
 
     [Fact]
+    public void BindStringValue_ByIndex_U8U8_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
+
+        stmt.BindTextParameter(1, "Adams_42\0"u8);
+
+        stmt.NewRowStep();
+
+        string value = stmt.GetColumnStringValue(0);
+        Assert.Equal("Adams_42", value);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindStringValue_ByIndex_U8U8_Throws_On_Not_Null_Terminated_Text()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
+
+        SQLiteException exception = Assert.Throws<SQLiteException>(() => stmt.BindTextParameter(1, "Adams_42"u8));
+        Assert.Equal("The UTF8 text in parameter 'utf8Text' must be null terminated!", exception.Message);
+    }
+
+    [Fact]
     public void BindBlobValue_Works()
     {
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
@@ -767,13 +934,30 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
-        var dateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var dateTime = new DateTime(year: 1970, month: 1, day: 2, hour: 6, minute: 30, second: 15, millisecond: 10, kind: DateTimeKind.Utc);
         stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.JulianDateReal);
 
         stmt.NewRowStep();
 
         double value = stmt.GetColumnDoubleValue(0);
-        Assert.Equal(2440587.5, value);
+        Assert.Equal(2440588.7710070601, value);
+
+        DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.JulianDateReal);
+        Assert.Equal(dateTime, dateTimeValue);
+
+        stmt.DoneStep();
+    }
+
+    [Fact]
+    public void BindDateTimeValue_JulianDateReal_SummerDate_Works()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
+
+        var dateTime = new DateTime(2024, 7, 15, 13, 14, 15, 0, DateTimeKind.Utc);
+        stmt.BindParameter(1, dateTime, SQLiteDateTimeFormat.JulianDateReal);
+
+        stmt.NewRowStep();
 
         DateTime dateTimeValue = stmt.GetColumnDateTimeValue(0, SQLiteDateTimeFormat.JulianDateReal);
         Assert.Equal(dateTime, dateTimeValue);
@@ -838,6 +1022,58 @@ public class SQLiteStatementTests
         Assert.Null(value);
 
         stmt.DoneStep();
+    }
+
+    [Fact]
+    public void NewRowStep_Throws_When_Result_Is_Done()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1 WHERE 1 = 0;\0"u8);
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => stmt.NewRowStep());
+        Assert.Equal("Expected new row, but step result was Done!", exception.Message);
+    }
+
+    [Fact]
+    public void DoneStep_Throws_When_Result_Is_NewRow()
+    {
+        using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using SQLiteStatement stmt = conn.PrepareStatement("SELECT 1;\0"u8);
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => stmt.DoneStep());
+        Assert.Equal("Expected done, but step result was NewRow!", exception.Message);
+    }
+
+    [Fact]
+    public void TryNewStep_Throws_When_Result_Is_Busy()
+    {
+        const string fileName = "SQLiteStatementTests_TryNewStep_Busy.sqlite";
+        if (File.Exists(fileName))
+        {
+            File.Delete(fileName);
+        }
+
+        using (var setupConnection = SQLiteConnection.CreateNewOrOpenExistingDb(fileName))
+        {
+            setupConnection.ExecuteNonQuery("CREATE TABLE t(x INTEGER);\0"u8);
+        }
+
+        using var lockConnection = SQLiteConnection.OpenExistingDb(fileName);
+        using var busyConnection = SQLiteConnection.OpenExistingDb(fileName);
+        busyConnection.SetBusyTimeout(0);
+
+        lockConnection.ExecuteNonQuery("BEGIN IMMEDIATE;\0"u8);
+        lockConnection.ExecuteNonQuery("INSERT INTO t VALUES (1);\0"u8);
+        try
+        {
+            using SQLiteStatement stmt = busyConnection.PrepareStatement("INSERT INTO t VALUES (42);\0"u8);
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => stmt.TryNewRowStep());
+            Assert.Equal("Expected new row or done, but step result was Busy!", exception.Message);
+        }
+        finally
+        {
+            lockConnection.ExecuteNonQuery("ROLLBACK;\0"u8);
+        }
     }
 
     [Fact]

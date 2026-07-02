@@ -24,6 +24,11 @@ public sealed partial class SQLiteStatement : IDisposable
         _connectionHandle = connectionHandle;
     }
 
+    /// <summary>
+    /// Prevents a default instance of the <see cref="SQLiteStatement"/> class from being created.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Always thrown.</exception>
+    [ExcludeFromCodeCoverage]
     private SQLiteStatement() => throw new NotSupportedException();
 
     /// <inheritdoc/>

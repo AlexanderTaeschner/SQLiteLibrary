@@ -3,10 +3,12 @@
 // </copyright>
 
 using SQLiteLibrary;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace SQLiteLibraryTest;
 
+[ExcludeFromCodeCoverage]
 public class SQLiteConnectionPoolTests
 {
     private const string FileName = "SQLiteConnectionPoolTests_TestDb.sqlite";
@@ -16,6 +18,63 @@ public class SQLiteConnectionPoolTests
     {
         InsertValue,
         SelectValue,
+    }
+
+    [Fact]
+    public void SQLiteConnectionPool_Return_Null_Throws()
+    {
+        IReadOnlyDictionary<SQLiteConnectionPoolTestStatements, string> sqlTextDictionary = new Dictionary<SQLiteConnectionPoolTestStatements, string>()
+        {
+            { SQLiteConnectionPoolTestStatements.SelectValue, "SELECT 1;" },
+        };
+
+        using var connectionPool = new SQLiteConnectionPool<SQLiteConnectionPoolTestStatements>(sqlTextDictionary, SQLiteConnection.CreateTemporaryInMemoryDb);
+
+        _ = Assert.Throws<ArgumentNullException>(() => connectionPool.Return(null!));
+    }
+
+    [Fact]
+    public void SQLiteConnectionPool_Rent_Unknown_Key_Throws()
+    {
+        IReadOnlyDictionary<SQLiteConnectionPoolTestStatements, string> sqlTextDictionary = new Dictionary<SQLiteConnectionPoolTestStatements, string>()
+        {
+            { SQLiteConnectionPoolTestStatements.SelectValue, "SELECT 1;" },
+        };
+
+        using var connectionPool = new SQLiteConnectionPool<SQLiteConnectionPoolTestStatements>(sqlTextDictionary, SQLiteConnection.CreateTemporaryInMemoryDb);
+
+        _ = Assert.Throws<KeyNotFoundException>(() => connectionPool.Rent((SQLiteConnectionPoolTestStatements)int.MaxValue));
+    }
+
+    [Fact]
+    public void SQLiteConnectionPool_Return_Adds_Unknown_Key_To_Pool_And_Resets_Statement()
+    {
+        IReadOnlyDictionary<SQLiteConnectionPoolTestStatements, string> sqlTextDictionary = new Dictionary<SQLiteConnectionPoolTestStatements, string>()
+        {
+            { SQLiteConnectionPoolTestStatements.SelectValue, "SELECT 1;" },
+        };
+
+        using var connectionPool = new SQLiteConnectionPool<SQLiteConnectionPoolTestStatements>(
+            sqlTextDictionary,
+            () => throw new InvalidOperationException("A new connection should not be created when a returned statement is available."));
+
+        SQLiteConnection connection = SQLiteConnection.CreateTemporaryInMemoryDb();
+        SQLiteStatement statement = connection.PrepareStatement("SELECT 1;\0"u8);
+
+        SQLiteStepResult firstStepResult = statement.Step();
+        Assert.Equal(SQLiteStepResult.NewRow, firstStepResult);
+
+        var pooledStatement = new SQLitePooledStatement<SQLiteConnectionPoolTestStatements>(SQLiteConnectionPoolTestStatements.InsertValue, connection, statement);
+        connectionPool.Return(pooledStatement);
+
+        SQLitePooledStatement<SQLiteConnectionPoolTestStatements> rentedStatement = connectionPool.Rent(SQLiteConnectionPoolTestStatements.InsertValue);
+        Assert.Same(statement, rentedStatement.Statement);
+
+        SQLiteStepResult stepResultAfterReset = rentedStatement.Statement.Step();
+        Assert.Equal(SQLiteStepResult.NewRow, stepResultAfterReset);
+        Assert.Equal(SQLiteStepResult.Done, rentedStatement.Statement.Step());
+
+        connectionPool.Return(rentedStatement);
     }
 
     [Fact]
