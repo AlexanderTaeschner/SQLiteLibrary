@@ -23,7 +23,7 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
-      run: dotnet restore --configuration Release SQLiteLibrary.slnx
+      run: dotnet restore SQLiteLibrary.slnx
     - name: Build
       run: dotnet build --configuration Release --no-restore SQLiteLibrary.slnx
     - name: Test
