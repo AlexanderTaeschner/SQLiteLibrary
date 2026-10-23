@@ -48,7 +48,7 @@ public class SQLiteConnectionTests
     public void Prepare_Statement_Throws_On_SQL_Error_Works()
     {
         List<(int ErrCode, string Message)> errors = [];
-        SQLiteConnection.LogErrorMessage += (errorCode,message) => errors.Add((errorCode, message));
+        SQLiteConnection.LogErrorMessage += (errorCode, message) => errors.Add((errorCode, message));
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         SQLiteException exception = Assert.Throws<SQLiteException>(() => conn.PrepareStatement("SELECT * FROM t;\0"u8));
         Assert.Equal("SELECT * FROM t;", exception.SqlStatement);

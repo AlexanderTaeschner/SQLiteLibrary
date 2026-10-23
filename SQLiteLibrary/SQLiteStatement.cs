@@ -246,12 +246,14 @@ public sealed partial class SQLiteStatement : IDisposable
     public bool TryNewRowStep()
     {
         SQLiteStepResult res = Step();
+#pragma warning disable IDE0072 // Add missing cases, but we want to throw an exception for unexpected results.
         return res switch
         {
             SQLiteStepResult.NewRow => true,
             SQLiteStepResult.Done => false,
             _ => throw new InvalidOperationException($"Expected new row or done, but step result was {res}!"),
         };
+#pragma warning restore IDE0072 // Add missing cases
     }
 
     /// <summary>
@@ -464,7 +466,7 @@ public sealed partial class SQLiteStatement : IDisposable
         }
 
         byte[]? bytes = new byte[size];
-        IntPtr ptr = NativeMethods.sqlite3_column_blob(_handle, columnIndex);
+        nint ptr = NativeMethods.sqlite3_column_blob(_handle, columnIndex);
 
         Marshal.Copy(ptr, bytes, 0, size);
         return bytes;

@@ -9,11 +9,11 @@ namespace SQLiteLibrary;
 internal sealed class SQLiteStatementHandle : SafeHandle
 {
     public SQLiteStatementHandle()
-    : base(IntPtr.Zero, true)
+    : base(nint.Zero, true)
     {
     }
 
-    public override bool IsInvalid => handle == IntPtr.Zero;
+    public override bool IsInvalid => handle == nint.Zero;
 
     protected override bool ReleaseHandle()
     {

@@ -4,9 +4,9 @@
 
 namespace SQLiteLibrary;
 
-/// <summary>
-/// Prepared SQL statement.
-/// </summary>
+/// <content>
+/// Contains methods to retrieve column values from the current result row of a query.
+/// </content>
 public sealed partial class SQLiteStatement : IDisposable
 {
     /// <summary>
@@ -28,7 +28,7 @@ public sealed partial class SQLiteStatement : IDisposable
     public double? GetColumnNullableDoubleValue(int columnIndex)
     {
         SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (double?)null : DoGetColumnDoubleValue(columnIndex, type);
+        return type == SQLiteDataType.Null ? null : DoGetColumnDoubleValue(columnIndex, type);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public sealed partial class SQLiteStatement : IDisposable
     public int? GetColumnNullableIntegerValue(int columnIndex)
     {
         SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (int?)null : DoGetColumnIntegerValue(columnIndex, type);
+        return type == SQLiteDataType.Null ? null : DoGetColumnIntegerValue(columnIndex, type);
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public sealed partial class SQLiteStatement : IDisposable
     public long? GetColumnNullableLongValue(int columnIndex)
     {
         SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (long?)null : DoGetColumnLongValue(columnIndex, type);
+        return type == SQLiteDataType.Null ? null : DoGetColumnLongValue(columnIndex, type);
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public sealed partial class SQLiteStatement : IDisposable
     public string? GetColumnNullableStringValue(int columnIndex)
     {
         SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (string?)null : DoGetColumnStringValue(columnIndex, type);
+        return type == SQLiteDataType.Null ? null : DoGetColumnStringValue(columnIndex, type);
     }
 
     /// <summary>
@@ -116,6 +116,6 @@ public sealed partial class SQLiteStatement : IDisposable
     public byte[]? GetColumnNullableBlobValue(int columnIndex)
     {
         SQLiteDataType type = GetColumnDataType(columnIndex);
-        return type == SQLiteDataType.Null ? (byte[]?)null : DoGetColumnBlobValue(columnIndex, type);
+        return type == SQLiteDataType.Null ? null : DoGetColumnBlobValue(columnIndex, type);
     }
 }

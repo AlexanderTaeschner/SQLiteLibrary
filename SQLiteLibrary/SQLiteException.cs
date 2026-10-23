@@ -17,6 +17,11 @@ public class SQLiteException : Exception
     {
     }
 
+    internal SQLiteException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+
     /// <summary>
     /// Prevents a default instance of the <see cref="SQLiteException"/> class from being created.
     /// </summary>

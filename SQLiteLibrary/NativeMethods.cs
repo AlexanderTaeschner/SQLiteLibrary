@@ -69,7 +69,7 @@ internal static partial class NativeMethods
     internal const int SQLITE_OPEN_READWRITE = 0x00000002;
     internal const int SQLITE_OPEN_CREATE = 0x00000004;
 
-    internal static readonly IntPtr SQLITE_TRANSIENT = new(-1);
+    internal static readonly nint SQLITE_TRANSIENT = new(-1);
 
     private const string SQLiteLibraryFileName = "sqlite3.dll";
 
@@ -80,17 +80,21 @@ internal static partial class NativeMethods
     static NativeMethods()
     {
         string? path = new Uri(typeof(NativeMethods).Assembly.Location).LocalPath;
+#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
         string? folder = Path.GetDirectoryName(path) ?? throw new FileNotFoundException("Could not load native SQLite library!");
+#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
 
         if (!OperatingSystem.IsWindows())
         {
+#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
             throw new PlatformNotSupportedException("Native SQLite library is only included for Windows!");
+#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
         }
 
         string? subFolder = Environment.Is64BitProcess ? @"runtimes\win-x64\native" : @"runtimes\win-x86\native";
 
-        IntPtr res = LoadLibrary(Path.Combine(folder, subFolder, SQLiteLibraryFileName));
-        if (res != IntPtr.Zero)
+        nint res = LoadLibrary(Path.Combine(folder, subFolder, SQLiteLibraryFileName));
+        if (res != nint.Zero)
         {
             return;
         }
@@ -98,15 +102,17 @@ internal static partial class NativeMethods
         subFolder = Environment.Is64BitProcess ? @"x64" : @"x86";
 
         res = LoadLibrary(Path.Combine(folder, subFolder, SQLiteLibraryFileName));
-        if (res != IntPtr.Zero)
+        if (res != nint.Zero)
         {
             return;
         }
 
+#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
         throw new FileNotFoundException("Could not load native SQLite library!");
+#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
     }
 
-    private unsafe delegate void NativeErrorLogCallback(IntPtr data, int errorCode, byte* message);
+    private unsafe delegate void NativeErrorLogCallback(nint data, int errorCode, byte* message);
 
     internal static void CheckResult(int result, string method, SQLiteConnectionHandle? connectionHandle)
     {
@@ -137,7 +143,7 @@ internal static partial class NativeMethods
         unsafe
         {
             byte* utf8Filename = ToUtf8BytePtr(fileName, out _);
-            result = sqlite3_open_v2(utf8Filename, out connectionHandle, flags, IntPtr.Zero);
+            result = sqlite3_open_v2(utf8Filename, out connectionHandle, flags, nint.Zero);
             FreeUtf8BytePtr(utf8Filename);
         }
 
@@ -156,26 +162,29 @@ internal static partial class NativeMethods
             byte* utf8SQLStatement = ToUtf8BytePtr(sqlStatement, out int byteCount);
             try
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, byteCount, out statementHandle, out IntPtr tail);
-                CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
-                if (tail != 0)
+                try
                 {
-                    string remainder = FromUtf8(tail);
-                    if (!string.IsNullOrEmpty(remainder))
+                    int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, byteCount, out statementHandle, out nint tail);
+                    CheckResult(result, "sqlite3_prepare_v2", connectionHandle);
+                    if (tail != 0)
                     {
-                        throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                        string remainder = FromUtf8(tail);
+                        if (!string.IsNullOrEmpty(remainder))
+                        {
+                            throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
+                        }
                     }
                 }
+                finally
+                {
+                    FreeUtf8BytePtr(utf8SQLStatement);
+                }
             }
-            catch (SQLiteException)
+            catch (Exception)
             {
                 // Ensure that we clean up the statement handle if an exception occurs.
                 statementHandle?.Dispose();
                 throw;
-            }
-            finally
-            {
-                FreeUtf8BytePtr(utf8SQLStatement);
             }
         }
 
@@ -189,13 +198,15 @@ internal static partial class NativeMethods
         {
             fixed (byte* utf8SQLStatement = sqlStatement)
             {
-                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, sqlStatement.Length, out SQLiteStatementHandle statementHandle, out IntPtr tail);
+                int result = sqlite3_prepare_v2(connectionHandle, utf8SQLStatement, sqlStatement.Length, out SQLiteStatementHandle statementHandle, out nint tail);
                 CheckResult(result, "sqlite3_prepare_v2", connectionHandle, utf8SQLStatement);
                 if (tail != 0)
                 {
                     string remainder = FromUtf8(tail);
                     if (!string.IsNullOrEmpty(remainder))
                     {
+                        // Dispose the created statement handle to avoid leaking it when throwing
+                        statementHandle.Dispose();
                         throw new SQLiteException($"SQL statement contained more than a single SQL command. Additional text: '{remainder}'");
                     }
                 }
@@ -267,19 +278,19 @@ internal static partial class NativeMethods
 
     internal static string GetColumnText(SQLiteStatementHandle handle, int columnIndex)
     {
-        IntPtr utf8Text = NativeMethods.sqlite3_column_text(handle, columnIndex);
+        nint utf8Text = NativeMethods.sqlite3_column_text(handle, columnIndex);
         return NativeMethods.FromUtf8(utf8Text);
     }
 
     internal static string GetErrorMessage(SQLiteConnectionHandle connectionHandle)
     {
-        IntPtr utf8Text = sqlite3_errmsg(connectionHandle);
+        nint utf8Text = sqlite3_errmsg(connectionHandle);
         return FromUtf8(utf8Text);
     }
 
     internal static string GetErrorString(int resultCode)
     {
-        IntPtr utf8Text = sqlite3_errstr(resultCode);
+        nint utf8Text = sqlite3_errstr(resultCode);
         return FromUtf8(utf8Text);
     }
 
@@ -308,7 +319,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial int sqlite3_close(IntPtr connectionHandle);
+    internal static partial int sqlite3_close(nint connectionHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -320,7 +331,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    internal static partial int sqlite3_finalize(IntPtr statementHandle);
+    internal static partial int sqlite3_finalize(nint statementHandle);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
@@ -389,7 +400,7 @@ internal static partial class NativeMethods
                 errorLogCallback(errorCode, msg);
             };
 
-            int result = sqlite3_config(SQLITE_CONFIG_LOG, s_nativeErrorLogCallback, IntPtr.Zero);
+            int result = sqlite3_config(SQLITE_CONFIG_LOG, s_nativeErrorLogCallback, nint.Zero);
             CheckResult(result, "sqlite3_config", null);
         }
     }
@@ -412,7 +423,7 @@ internal static partial class NativeMethods
     /// Converts the specified string to a null-terminated UTF-8 encoded byte pointer.
     /// </summary>
     /// <remarks>The caller is responsible for freeing the allocated memory using <see
-    /// cref="Marshal.FreeCoTaskMem(IntPtr)"/>  to avoid memory leaks. The returned pointer is allocated using COM task
+    /// cref="Marshal.FreeCoTaskMem(nint)"/>  to avoid memory leaks. The returned pointer is allocated using COM task
     /// memory.</remarks>
     /// <param name="s">The string to convert. If <see langword="null"/>, the method returns <see langword="null"/>.</param>
     /// <param name="byteCount">The number of bytes in the UTF-8 encoded string, including the null terminator.</param>
@@ -436,11 +447,11 @@ internal static partial class NativeMethods
     }
 
     private static unsafe void FreeUtf8BytePtr(byte* ptr)
-        => Marshal.FreeCoTaskMem((IntPtr)ptr);
+        => Marshal.FreeCoTaskMem((nint)ptr);
 
-    private static unsafe string FromUtf8(byte* ptr) => FromUtf8((IntPtr)ptr);
+    private static unsafe string FromUtf8(byte* ptr) => FromUtf8((nint)ptr);
 
-    private static string FromUtf8(IntPtr ptr)
+    private static string FromUtf8(nint ptr)
         => Marshal.PtrToStringUTF8(ptr) ?? throw new ArgumentNullException(nameof(ptr));
 
     [DoesNotReturn]
@@ -461,7 +472,7 @@ internal static partial class NativeMethods
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
-    private static partial IntPtr sqlite3_errstr(int resultCode);
+    private static partial nint sqlite3_errstr(int resultCode);
 
     [LibraryImport(SQLiteLibraryFileName)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]

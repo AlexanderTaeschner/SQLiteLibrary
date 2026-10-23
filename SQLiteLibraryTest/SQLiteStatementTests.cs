@@ -558,7 +558,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, (string)null!));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindParameter(1, null!));
         stmt.BindParameter(1, "Adams_42");
 
         stmt.NewRowStep();
@@ -733,7 +733,7 @@ public class SQLiteStatementTests
         using var conn = SQLiteConnection.CreateTemporaryInMemoryDb();
         using SQLiteStatement stmt = conn.PrepareStatement("SELECT ?1;\0"u8);
 
-        Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter(1, (byte[])null!));
+        Assert.Throws<ArgumentNullException>(() => stmt.BindBlobParameter(1, null!));
         stmt.BindBlobParameter(1, (byte[])[0xAF, 0x42, 0xFA]);
 
         stmt.NewRowStep();

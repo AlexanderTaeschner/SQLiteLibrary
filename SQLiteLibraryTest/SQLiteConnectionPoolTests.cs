@@ -58,7 +58,7 @@ public class SQLiteConnectionPoolTests
             sqlTextDictionary,
             () => throw new InvalidOperationException("A new connection should not be created when a returned statement is available."));
 
-        SQLiteConnection connection = SQLiteConnection.CreateTemporaryInMemoryDb();
+        using var connection = SQLiteConnection.CreateTemporaryInMemoryDb();
         SQLiteStatement statement = connection.PrepareStatement("SELECT 1;\0"u8);
 
         SQLiteStepResult firstStepResult = statement.Step();

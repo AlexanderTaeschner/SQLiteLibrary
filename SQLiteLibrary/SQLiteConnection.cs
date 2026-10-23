@@ -27,7 +27,9 @@ public sealed class SQLiteConnection : IDisposable
     /// <remarks>Subscribers can use this event to capture error details for logging, monitoring, or custom
     /// error handling. The event is static, so handlers should be attached at the class level. Ensure that event
     /// handlers do not throw exceptions, as this may disrupt error processing.</remarks>
+#pragma warning disable CA1003 // Use generic event handler instances, but this is a specific callback for SQLite error logging.
     public static event ErrorLogCallback? LogErrorMessage;
+#pragma warning restore CA1003 // Use generic event handler instances
 
     /// <summary>
     /// Creates a SQLite connection to a temporary in-memory database.

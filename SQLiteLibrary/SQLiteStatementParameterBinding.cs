@@ -4,9 +4,9 @@
 
 namespace SQLiteLibrary;
 
-/// <summary>
-/// Prepared SQL statement.
-/// </summary>
+/// <content>
+/// Contains methods to bind parameters to a prepared SQL statement.
+/// </content>
 public sealed partial class SQLiteStatement : IDisposable
 {
     /// <summary>
