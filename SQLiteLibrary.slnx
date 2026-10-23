@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path=".github/workflows/dotnet.yml" />
     <File Path="appveyor.yml" />
+    <File Path="global.json" />
     <File Path="README.md" />
   </Folder>
   <Project Path="SQLiteLibrary/SQLiteLibrary.csproj" />
