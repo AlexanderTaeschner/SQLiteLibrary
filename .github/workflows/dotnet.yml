@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore SQLiteLibrary.slnx
     - name: Test
-      run: dotnet test --no-build --verbosity normal SQLiteLibrary.slnx
+      run: dotnet test --configuration Release --no-build --verbosity normal SQLiteLibrary.slnx
   publish:
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
