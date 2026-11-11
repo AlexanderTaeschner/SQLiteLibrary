@@ -80,15 +80,11 @@ internal static partial class NativeMethods
     static NativeMethods()
     {
         string? path = new Uri(typeof(NativeMethods).Assembly.Location).LocalPath;
-#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
         string? folder = Path.GetDirectoryName(path) ?? throw new FileNotFoundException("Could not load native SQLite library!");
-#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
 
         if (!OperatingSystem.IsWindows())
         {
-#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
             throw new PlatformNotSupportedException("Native SQLite library is only included for Windows!");
-#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
         }
 
         string? subFolder = Environment.Is64BitProcess ? @"runtimes\win-x64\native" : @"runtimes\win-x86\native";
@@ -107,9 +103,7 @@ internal static partial class NativeMethods
             return;
         }
 
-#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations, but we need to ensure that the native SQLite library is loaded correctly during static initialization.
         throw new FileNotFoundException("Could not load native SQLite library!");
-#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
     }
 
     private unsafe delegate void NativeErrorLogCallback(nint data, int errorCode, byte* message);
